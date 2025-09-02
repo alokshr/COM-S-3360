@@ -1,5 +1,7 @@
+#include <iostream>
 #ifndef VEC3_H 
 #define VEC3_H
+
 
 /**
  * A class for representing 3D vectors
@@ -23,12 +25,15 @@ class vec3 {
         float z;
 
         /**
-         * Creates a vec3 with all components set to 0.
+         * Creates a new vec3 with all components set to 0.
          */
         vec3();
 
         /**
-         * Creates a vec3 with given component values.
+         * Creates a new vec3 with given component values.
+         * @param x the x component of the vec3
+         * @param y the x component of the vec3
+         * @param z the x component of the vec3
          */
         vec3(float x, float y, float z);
 
@@ -67,5 +72,7 @@ class vec3 {
          */
         vec3 operator/(const float other);
 };
+
+std::ostream& operator<<(std::ostream& os, const vec3& other);
 
 #endif

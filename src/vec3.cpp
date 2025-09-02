@@ -58,3 +58,8 @@ vec3 vec3::operator/(const float other) {
                 this->y / other,
                 this->z / other);
 }
+
+std::ostream& operator<<(std::ostream& os, const vec3& other) {
+    os << "(" << other.x << ", " << other.y << ", " << other.z << ")";
+    return os;
+}
