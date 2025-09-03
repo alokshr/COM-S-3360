@@ -32,8 +32,8 @@ int main(int argc, char** argv) {
     f = fopen("gradient.ppm", "wb");    // b flag is ignored in non-Windows
                                         // In Windows, "binary mode" suppresses carriage return after \n
 
-    fprintf(f, "P6 %d %d 255 ", X, Y);
-    fwrite(raster, sizeof(uint8_t) * 3, X*Y, f);
+    fprintf(f, "P6 %d %d 255 ", Y, X);
+    fwrite(raster, sizeof(uint8_t) * 3, X * Y, f);
 
     return 0;
 }

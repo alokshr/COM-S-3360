@@ -25,15 +25,15 @@ class vec3 {
         float z;
 
         /**
-         * Creates a new vec3 with all components set to 0.
+         * Creates a new 3D vector with all components set to 0.
          */
         vec3();
 
         /**
-         * Creates a new vec3 with given component values.
-         * @param x the x component of the vec3
-         * @param y the x component of the vec3
-         * @param z the x component of the vec3
+         * Creates a new 3D vector with given component values.
+         * @param x the x component of the vector
+         * @param y the x component of the vector
+         * @param z the x component of the vector
          */
         vec3(float x, float y, float z);
 
@@ -49,30 +49,51 @@ class vec3 {
          */
         float sqmag();
 
-        vec3 operator+(const vec3& other);
-        vec3 operator-(const vec3& other);
+        /**
+         * Calculates the dot product of two vectors.
+         */
+        static float dot(const vec3& lhs, const vec3& rhs);
+
+        /**
+         * Calculates the cross product of two vectors.
+         */
+        static vec3 cross(const vec3& lhs, const vec3& rhs);
+
+        /**
+         * Adds the components of two vectors as a new vector.
+         */
+        vec3 operator+(const vec3& v);
+
+        /**
+         * Subtracts the components of two vectors as a new vector.
+         */
+        vec3 operator-(const vec3& v);
 
         /**
          * Scales this vector by the given scalar value.
          */
-        vec3 operator*(const int other);
+        vec3 operator*(const int scalar);
         
         /**
          * Scales this vector by the given scalar value.
          */
-        vec3 operator*(const float other);
+        vec3 operator*(const float scalar);
         
         /**
          * Scales this vector by the given scalar value.
          */
-        vec3 operator/(const int other);
+        vec3 operator/(const int scalar);
         
         /**
          * Scales this vector by the given scalar value.
          */
-        vec3 operator/(const float other);
+        vec3 operator/(const float scalar);
+
+        bool operator==(const vec3& v);
+        
+        bool operator!=(const vec3& v);
 };
 
-std::ostream& operator<<(std::ostream& os, const vec3& other);
+std::ostream& operator<<(std::ostream& os, const vec3& v);
 
 #endif

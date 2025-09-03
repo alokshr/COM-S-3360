@@ -23,43 +23,70 @@ float vec3::sqmag() {
             pow(this->z, 2);
 };
 
-vec3 vec3::operator+(const vec3& other) {
-    return vec3(this->x + other.x,
-                this->y + other.y,
-                this->z + other.z);
+float vec3::dot(const vec3& lhs, const vec3& rhs) {
+    return (lhs.x * rhs.x) +
+        (lhs.y * rhs.y) +
+        (lhs.z * rhs.z);
 }
 
-vec3 vec3::operator-(const vec3& other) {
-    return vec3(this->x - other.x,
-                this->y - other.y,
-                this->z - other.z);
+vec3 vec3::cross(const vec3& lhs, const vec3& rhs) {
+    return vec3(
+        lhs.y*rhs.z - lhs.z*rhs.y,
+        lhs.z*rhs.x - lhs.x*rhs.z,
+        lhs.x*rhs.y - lhs.y*rhs.x
+    );
 }
 
-vec3 vec3::operator*(const int other) {
-    return vec3(this->x * other,
-                this->y * other,
-                this->z * other);
+vec3 vec3::operator+(const vec3& v) {
+    return vec3(this->x + v.x,
+                this->y + v.y,
+                this->z + v.z);
 }
 
-vec3 vec3::operator*(const float other) {
-    return vec3(this->x * other,
-                this->y * other,
-                this->z * other);
+vec3 vec3::operator-(const vec3& v) {
+    return vec3(this->x - v.x,
+                this->y - v.y,
+                this->z - v.z);
 }
 
-vec3 vec3::operator/(const int other) {
-    return vec3(this->x / other,
-                this->y / other,
-                this->z / other);
+vec3 vec3::operator*(const int scalar) {
+    return vec3(this->x * scalar,
+                this->y * scalar,
+                this->z * scalar);
 }
 
-vec3 vec3::operator/(const float other) {
-    return vec3(this->x / other,
-                this->y / other,
-                this->z / other);
+vec3 vec3::operator*(const float scalar) {
+    return vec3(this->x * scalar,
+                this->y * scalar,
+                this->z * scalar);
 }
 
-std::ostream& operator<<(std::ostream& os, const vec3& other) {
-    os << "(" << other.x << ", " << other.y << ", " << other.z << ")";
+vec3 vec3::operator/(const int scalar) {
+    return vec3(this->x / scalar,
+                this->y / scalar,
+                this->z / scalar);
+}
+
+vec3 vec3::operator/(const float scalar) {
+    return vec3(this->x / scalar,
+                this->y / scalar,
+                this->z / scalar);
+}
+
+bool vec3::operator==(const vec3& v) {
+    return (this->x == v.x) &&
+            (this->y == v.y) &&
+            (this->z == v.z);
+}
+
+
+bool vec3::operator!=(const vec3& v) {
+    return (this->x != v.x) ||
+            (this->y != v.y) ||
+            (this->z != v.z);
+}
+
+std::ostream& operator<<(std::ostream& os, const vec3& v) {
+    os << "(" << v.x << ", " << v.y << ", " << v.z << ")";
     return os;
 }
