@@ -10,26 +10,12 @@
  */
 class vec3 {
     public:
-
-        /**
-         * The x component of a vec3.
-         */
-        float x;
-
-        /**
-         * The y component of a vec3.
-         */
-        float y;
-
-        /**
-         * The z component of a vec3.
-         */
-        float z;
+        double e[3];
 
         /**
          * Creates a new 3D vector with all components set to 0.
          */
-        vec3() : x(0),y(0),z(0) {};
+        vec3() : e{0,0,0} {};
 
         /**
          * Creates a new 3D vector with given component values.
@@ -37,44 +23,86 @@ class vec3 {
          * @param y the x component of the vector
          * @param z the x component of the vector
          */
-        vec3(float x, float y, float z) : x(x), y(y), z(z) {};
+        vec3(double x, double y, double z) : e{x,y,z} {};
 
-        vec3(const vec3& rhs);
+        /**
+         * Creates a new 3D vector by copying the components of another vector
+         * @param v vector to copy
+         */
+        vec3(const vec3& v) {
+            e[0] = v[0];
+            e[1] = v[1];
+            e[2] = v[2];
+        }
 
-        vec3& operator=(const vec3& rhs);
+        /**
+         * Copies the components of a vector into this vector
+         * @param v vector to copy
+         */
+        vec3& operator=(const vec3& v) {
+            if (this != &v) {
+                e[0] = v[0];
+                e[1] = v[1];
+                e[2] = v[2];;
+            }
+
+            return *this;
+        }
+        
+        /**
+         * Returns the x component of this vector
+         */
+        inline double x() const { return e[0]; }
+
+        /**
+         * Returns the y component of this vector
+         */
+        inline double y() const { return e[1]; }
+
+        /**
+         * Returns the z component of this vector
+         */
+        inline double z() const { return e[2]; }
+
+        /**
+         * Applies a scalar of -1 on this vector
+         */
+        inline vec3 operator-() { return vec3(-e[0], -e[1], -e[2]); }
+
+        /**
+         * Returns the indexed component of this vector
+         */
+        inline double operator[](int i) const { return e[i]; }
+
+        /**
+         * Returns the indexed component of this vector
+         */
+        inline double& operator[](int i) { return e[i]; }
 
         /**
          * Returns the magnitude/distance of this vector.
          * Calculates sqrt(x**2 + y**2 + z**2).
          */
-        inline float mag() const {
-            return sqrt(this->sqmag());
-        }
+        inline double mag() const { return std::sqrt(this->sqmag()); }
 
         /**
          * Returns the squared magnitude/distance of this vector.
          * Calculates x**2 + y**2 + z**2. Faster than mag().
          */
-        inline float sqmag() const {    
-            return pow(this->x, 2) +
-                pow(this->y, 2) +
-                pow(this->z, 2);
+        inline double sqmag() const {     
+            return dot(*this, *this);
         }
 
         /**
          * Normalizes this vector to have a magnitude of one.
          */
-        inline void norm() {
-            *this /= this->mag();
-        }
+        inline vec3 norm() { return *this / this->mag(); }
 
         /**
          * Calculates the dot product of two vectors.
          */
-        static inline float dot(const vec3& lhs, const vec3& rhs) {
-            return (lhs.x * rhs.x) +
-                (lhs.y * rhs.y) +
-                (lhs.z * rhs.z);
+        static inline double dot(const vec3& lhs, const vec3& rhs) {
+            return lhs[0]*rhs[0] + lhs[1]*rhs[1] + lhs[2]*rhs[2];
         }
 
         /**
@@ -82,72 +110,132 @@ class vec3 {
          */
         static inline vec3 cross(const vec3& lhs, const vec3& rhs) {
             return vec3(
-                lhs.y*rhs.z - lhs.z*rhs.y,
-                lhs.z*rhs.x - lhs.x*rhs.z,
-                lhs.x*rhs.y - lhs.y*rhs.x
+                lhs[1]*rhs[2] - lhs[2]*rhs[1],
+                lhs[2]*rhs[0] - lhs[0]*rhs[2],
+                lhs[0]*rhs[1] - lhs[1]*rhs[0]
             );
         }
         
         /**
          * Calculates the angle in radians between of two vectors.
          */
-        static inline float angle(const vec3& lhs, const vec3& rhs) {
-            return acos(vec3::dot(lhs, rhs))/(lhs.mag()*rhs.mag());
+        static inline double angle(const vec3& lhs, const vec3& rhs) {
+            return std::acos(vec3::dot(lhs, rhs))/(lhs.mag()*rhs.mag());
         }
 
         /**
          * Adds the components of two vectors as a new vector.
          */
-        vec3 operator+(const vec3& v);
+        inline vec3 operator+(const vec3& v) {
+            return vec3(e[0] + v[0],
+                        e[1] + v[1],
+                        e[2] + v[2]);
+        }
         
         /**
          * Adds the components of a given vector to a vector.
          */
-        vec3& operator+=(const vec3& v);
+        inline vec3& operator+=(const vec3& v) {
+            e[0] += v[0];
+            e[1] += v[1];
+            e[2] += v[2];
+            return *this;
+        }
 
         /**
          * Subtracts the components of two vectors as a new vector.
          */
-        vec3 operator-(const vec3& v);
+        inline vec3 operator-(const vec3& v) {
+            return vec3(e[0] - v[0],
+                        e[1] - v[1],
+                        e[2] - v[2]);
+        }
 
         /**
          * Subtracts the components of a given vector from a vector.
          */
-        vec3& operator-=(const vec3& v);
+        inline vec3& operator-=(const vec3& v) {
+            e[0] -= v[0];
+            e[1] -= v[1];
+            e[2] -= v[2];
+            return *this;
+        }
+
+        /**
+         * Adds a value to all components of a vector
+         */
+        inline vec3 operator+(double a) {
+            return vec3(e[0]+a, e[1]+a, e[2]+a);
+        }
+
+        /**
+         * Adds a value to all components of this vector
+         */
+        inline vec3 operator+=(double a) {
+            e[0] += a;
+            e[1] += a;
+            e[2] += a;
+            return *this;
+        }
 
         /**
          * Scales a vector by the given scalar value.
          */
-        vec3 operator*(double scalar);
+        inline vec3 operator*(double scalar) {
+            return vec3(e[0]*scalar,
+                        e[1]*scalar,
+                        e[2]*scalar);
+        }
         
         /**
          * Scales this vector by the given scalar value.
          */
-        vec3 operator*=(double scalar);
+        inline vec3 operator*=(double scalar) {
+            e[0] *= scalar;
+            e[1] *= scalar;
+            e[2] *= scalar;
+            return *this;
+        }
         
         /**
          * Divide a vector's components by the given scalar value.
          */
-        vec3 operator/(double scalar);
+        inline vec3 operator/(double scalar) {
+            return *this*(1/scalar);
+        }
 
         /**
          * Divide this vector's components by the given scalar value.
          */
-        vec3 operator/=(double scalar);
+        inline vec3 operator/=(double scalar) {
+            *this *= 1/scalar;
+            return *this;
+        }
 
         /**
          * Check for equality based on if vectors have matching components
          * @param v vec3 to compare
          */
-        bool operator==(const vec3& v);
+        inline bool operator==(const vec3& v) {
+            return e[0] == v[0] &&
+                    (e[1] == v[1]) &&
+                    (e[2] == v[2]);
+        }
         
         /**
          * Check for inequality based on if vectors have different components
          * @param v vec3 to compare
          */
-        bool operator!=(const vec3& v);
+        inline bool operator!=(const vec3& v) {
+            return e[0] != v[0] ||
+                    (e[1] != v[1]) ||
+                    (e[2] != v[2]);
+        }
 };
 
-std::ostream& operator<<(std::ostream& os, const vec3& v);
+std::ostream& operator<<(std::ostream& os, const vec3& v) {
+    os << "(" << v[0] << ", " << v[1] << ", " << v[2] << ")";
+    return os;
+}
 
 #endif
