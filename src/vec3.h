@@ -124,15 +124,6 @@ class vec3 {
         }
 
         /**
-         * Adds the components of two vectors as a new vector.
-         */
-        inline vec3 operator+(const vec3& v) {
-            return vec3(e[0] + v[0],
-                        e[1] + v[1],
-                        e[2] + v[2]);
-        }
-        
-        /**
          * Adds the components of a given vector to a vector.
          */
         inline vec3& operator+=(const vec3& v) {
@@ -140,15 +131,6 @@ class vec3 {
             e[1] += v[1];
             e[2] += v[2];
             return *this;
-        }
-
-        /**
-         * Subtracts the components of two vectors as a new vector.
-         */
-        inline vec3 operator-(const vec3& v) {
-            return vec3(e[0] - v[0],
-                        e[1] - v[1],
-                        e[2] - v[2]);
         }
 
         /**
@@ -162,13 +144,6 @@ class vec3 {
         }
 
         /**
-         * Adds a value to all components of a vector
-         */
-        inline vec3 operator+(double a) {
-            return vec3(e[0]+a, e[1]+a, e[2]+a);
-        }
-
-        /**
          * Adds a value to all components of this vector
          */
         inline vec3 operator+=(double a) {
@@ -176,15 +151,6 @@ class vec3 {
             e[1] += a;
             e[2] += a;
             return *this;
-        }
-
-        /**
-         * Scales a vector by the given scalar value.
-         */
-        inline vec3 operator*(double scalar) {
-            return vec3(e[0]*scalar,
-                        e[1]*scalar,
-                        e[2]*scalar);
         }
         
         /**
@@ -196,19 +162,14 @@ class vec3 {
             e[2] *= scalar;
             return *this;
         }
-        
-        /**
-         * Divide a vector's components by the given scalar value.
-         */
-        inline vec3 operator/(double scalar) {
-            return *this*(1/scalar);
-        }
 
         /**
          * Divide this vector's components by the given scalar value.
          */
         inline vec3 operator/=(double scalar) {
-            *this *= 1/scalar;
+            e[0] /= scalar;
+            e[1] /= scalar;
+            e[2] /= scalar;
             return *this;
         }
 
@@ -221,7 +182,7 @@ class vec3 {
                     (e[1] == v[1]) &&
                     (e[2] == v[2]);
         }
-        
+
         /**
          * Check for inequality based on if vectors have different components
          * @param v vec3 to compare
@@ -236,6 +197,70 @@ class vec3 {
 std::ostream& operator<<(std::ostream& os, const vec3& v) {
     os << "(" << v[0] << ", " << v[1] << ", " << v[2] << ")";
     return os;
+}
+
+/**
+ * Adds the components of two vectors as a new vector.
+ */
+inline vec3 operator+(const vec3& lhs, const vec3& rhs) {
+    return vec3(lhs[0] + rhs[0],
+                lhs[1] + rhs[1],
+                lhs[2] + rhs[2]);
+}
+
+/**
+ * Subtracts the components of two vectors as a new vector.
+ */
+inline vec3 operator-(const vec3& lhs, const vec3& rhs) {
+    return vec3(lhs[0] - rhs[0],
+                lhs[1] - rhs[1],
+                lhs[2] - rhs[2]);
+}
+
+/**
+ * Adds a value to all components of a vector
+ */
+inline vec3 operator+(const vec3& v, double a) {
+    return vec3(v[0]+a, v[1]+a, v[2]+a);
+}
+
+/**
+ * Adds a value to all components of a vector
+ */
+inline vec3 operator+(double a, const vec3& v) {
+    return v + a;
+}
+
+/**
+ * Scales a vector by the given scalar value.
+ */
+inline vec3 operator*(const vec3& v, double scalar) {
+    return vec3(v[0]*scalar,
+                v[1]*scalar,
+                v[2]*scalar);
+}
+
+/**
+ * Scales a vector by the given scalar value.
+ */
+inline vec3 operator*(double scalar, const vec3& v) {
+    return v * scalar;
+}
+
+/**
+ * Divide a vector's components by the given scalar value.
+ */
+inline vec3 operator/(const vec3& v, double scalar) {
+    return vec3(v[0]/scalar,
+                v[1]/scalar,
+                v[2]/scalar);
+}
+
+/**
+ * Divide a vector's components by the given scalar value.
+ */
+inline vec3 operator/(double scalar, const vec3& v) {
+    return v / scalar;
 }
 
 #endif
