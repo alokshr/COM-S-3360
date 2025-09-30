@@ -168,7 +168,7 @@ int main(int argc, char const *argv[])
 
                 // Texture coordinate calculations
                 // uv = ta + bary[1](tb - ta) + bary[2](tc - ta)
-                vec3 uv = t.a + (t.b - t.a)*bary[1] + (t.c - t.a)*bary[2];
+                vec3 uv = t.a + bary[1]*(t.b - t.a) + bary[2]*(t.c - t.a);
 
                 if (bary[0] >= 0 && bary[1] >= 0 && bary[2] >= 0) {
                     // image[y][x] += 1.0;

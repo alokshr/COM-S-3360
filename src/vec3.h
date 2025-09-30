@@ -96,7 +96,12 @@ class vec3 {
         /**
          * Normalizes this vector to have a magnitude of one.
          */
-        inline vec3 norm() { return *this / this->mag(); }
+        inline vec3 norm() {
+            e[0] /= this->mag();
+            e[1] /= this->mag();
+            e[2] /= this->mag();
+            return *this;
+        }
 
         /**
          * Calculates the dot product of two vectors.
