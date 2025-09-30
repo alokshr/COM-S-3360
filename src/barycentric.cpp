@@ -112,9 +112,9 @@ int main(int argc, char const *argv[])
                     image[y][x] += 1.0;
                 }
 
-                std::cout << "\r[";
-                float percent = (float) (y*X + x*SAMPLES_PER_PIXEL + s)/(X*Y*SAMPLES_PER_PIXEL);
-                int width = (int) (20 * percent);
+                // std::cout << "\r[";
+                // float percent = (float) (y*X + x*SAMPLES_PER_PIXEL + s)/(X*Y*SAMPLES_PER_PIXEL);
+                // int width = (int) (20 * percent);
                 
                 
             }
