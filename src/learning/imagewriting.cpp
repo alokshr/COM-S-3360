@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstdint>
-#include "vec3.h"
+#include "../vec3.h"
 
 #define X 1024
 #define Y 760

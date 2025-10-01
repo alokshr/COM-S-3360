@@ -10,7 +10,16 @@ void HandleClayErrors(Clay_ErrorData errorData) {
 
 int main(int argc, char const *argv[])
 {
+    Font fonts[2];
+
+    const int REGULAR_FONT = 0;
+    const int OTHER_FONT = 1;
+
+    fonts[REGULAR_FONT] = LoadFontEx("../resources/Roboto-Regular.ttf", 12, 0, 400);
+    fonts[OTHER_FONT] = LoadFontEx("../resources/resources/RobotoMono-Medium.ttf", 12, 0, 400);
+
     Clay_Raylib_Initialize(1024, 768, "Clay UI Demo", FLAG_WINDOW_RESIZABLE);
+    Clay_SetMeasureTextFunction(Raylib_MeasureText, fonts);
     InitWindow(GetScreenWidth(), GetScreenHeight(), "Window");
 
     uint64_t totalMemorySize = Clay_MinMemorySize();
@@ -23,13 +32,6 @@ int main(int argc, char const *argv[])
         HandleClayErrors, 0
     });
 
-    Font fonts[2];
-
-    const int REGULAR_FONT = 0;
-    const int OTHER_FONT = 1;
-
-    fonts[REGULAR_FONT] = LoadFontEx("../resources/Roboto-Regular.ttf", 12, 0, 400);
-    fonts[OTHER_FONT] = LoadFontEx("../resources/resources/RobotoMono-Medium.ttf", 12, 0, 400);
 
     while (!WindowShouldClose()) {
         Clay_SetLayoutDimensions((Clay_Dimensions) {
