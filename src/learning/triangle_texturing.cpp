@@ -68,7 +68,7 @@ int main(int argc, char const *argv[])
 {
     load_texture();
 
-    int x, y, s;
+    int x, y, s, i;
     double px, py;
     vec3 p;
     vec3 v1;
@@ -82,7 +82,7 @@ int main(int argc, char const *argv[])
     srand(time(NULL));
 
     // Make a triangle
-    triangle t = {
+    triangle t1 = {
         vec3(-1.0, -1.0, -1.0),
         vec3( 1.0,  1.0, -1.0),
         vec3(-1.0,  1.0, -1.0),
@@ -90,98 +90,105 @@ int main(int argc, char const *argv[])
         vec3( 1.0,  1.0,  0.0),
         vec3( 0.0,  1.0,  0.0),
         vec3::cross(
-            t.b - t.a,
-            t.c - t.a
+            t1.b - t1.a,
+            t1.c - t1.a
         )
     };
 
     // Make a triangle
     triangle t2 = {
-        vec3(-1.0, -1.0, -1.0),
         vec3( 1.0,  1.0, -1.0),
-        vec3(-1.0,  1.0, -1.0),
-        vec3( 0.0,  0.0,  0.0),
+        vec3( 1.0, -1.0, -1.0),
+        vec3(-1.0, -1.0, -1.0),
         vec3( 1.0,  1.0,  0.0),
-        vec3( 0.0,  1.0,  0.0),
+        vec3( 1.0,  0.0,  0.0),
+        vec3( 0.0,  0.0,  0.0),
         vec3::cross(
             t2.b - t2.a,
             t2.c - t2.a
         )
     };
 
+    triangle tarr[2];
+
+    tarr[0] = t1;
+    tarr[1] = t2;
+
     // Produce image (plane goes from -1 to 1 in both X and Y directions)
     for (y = 0; y < Y; y++) {
         for (x = 0; x < X; x++) {
             for (s = 0; s < SAMPLES_PER_PIXEL; s++) {
-                /*
-                switch (s) {
-                    case 0:
-                        sx = -1.0/(2*X);
-                        sy = -1.0/(2*Y);
-                        break;
-                    case 1:
-                        sx = 1.0/(2*X);
-                        sy = -1.0/(2*Y);
-                        break;
-                    case 2:
-                        sx = -1.0/(2*X);
-                        sy = 1.0/(2*Y);
-                        break;
-                    case 3:
-                        sx = 1.0/(2*X);
-                        sy = 1.0/(2*Y);
-                        break;
+                for (i = 0; i < 2; i++) {
+                    triangle t = tarr[i];
+                    /*
+                    switch (s) {
+                        case 0:
+                            sx = -1.0/(2*X);
+                            sy = -1.0/(2*Y);
+                            break;
+                        case 1:
+                            sx = 1.0/(2*X);
+                            sy = -1.0/(2*Y);
+                            break;
+                        case 2:
+                            sx = -1.0/(2*X);
+                            sy = 1.0/(2*Y);
+                            break;
+                        case 3:
+                            sx = 1.0/(2*X);
+                            sy = 1.0/(2*Y);
+                            break;
+                    }
+                    */
+
+                    // Get a random number. Scale it to the dimensions of a pixel.
+                    // Then, subtract half a pixel.
+                    sx = (frand() / X) - (1.0/(2.0*X));
+                    sy = (frand() / Y) - (1.0/(2.0*Y));
+
+                    // Get center of a pixel, plus randomness for aliasing
+                    px = ((double) x/X)*(2.0) - 1 + sx;
+                    py = -(((double) y/Y)*(2.0) - 1 + sy);
+
+                    p = vec3(
+                        px, 
+                        py, 
+                        -1.0    // Triangle plane is at -1, usually would need a ray-plane intersection to get this value
+                    );
+
+                    // na = (c-b) x (p-b);
+                    na = vec3::cross(t.c-t.b, p-t.b);
+                    
+                    // nb = (a-c) x (p-c);
+                    nb = vec3::cross(t.a-t.c, p-t.c);
+                    
+                    // nc = (b-a) x (p-a);
+                    nc = vec3::cross(t.b-t.a, p-t.a);
+
+                    bary = vec3(
+                        (vec3::dot(na, t.n))/t.n.sqmag(),
+                        (vec3::dot(nb, t.n))/t.n.sqmag(),
+                        (vec3::dot(nc, t.n))/t.n.sqmag()
+                    );
+
+                    // std::cout << na << nb << nc << std::endl;
+
+                    // Texture coordinate calculations
+                    // uv = ta + bary[1](tb - ta) + bary[2](tc - ta)
+                    vec3 uv = t.a + bary[1]*(t.b - t.a) + bary[2]*(t.c - t.a);
+
+                    if (bary[0] >= 0 && bary[1] >= 0 && bary[2] >= 0) {
+                        image[y][x] += 1.0;
+                        // int u = (int) (uv.x()*TX);
+                        // int v = TY - ((int) (uv.y()*TY));
+
+                        // image[y][x] += texture[v][u];
+                    }
+
+                    // std::cout << "\r[";
+                    // float percent = (float) (y*X + x*SAMPLES_PER_PIXEL + s)/(X*Y*SAMPLES_PER_PIXEL);
+                    // int width = (int) (20 * percent);
                 }
-                */
-
-                // Get a random number. Scale it to the dimensions of a pixel.
-                // Then, subtract half a pixel.
-                sx = (frand() / X) - (1.0/(2.0*X));
-                sy = (frand() / Y) - (1.0/(2.0*Y));
-
-                // Get center of a pixel, plus randomness for aliasing
-                px = ((double) x/X)*(2.0) - 1 + sx;
-                py = ((double) y/Y)*(2.0) - 1 + sy;
-
-                p = vec3(
-                    px, 
-                    py, 
-                    -1.0    // Triangle plane is at -1, usually would need a ray-plane intersection to get this value
-                );
-
-                // na = (c-b) x (p-b);
-                na = vec3::cross(t.c-t.b, p-t.b);
-                
-                // nb = (a-c) x (p-c);
-                nb = vec3::cross(t.a-t.c, p-t.c);
-                
-                // nc = (b-a) x (p-a);
-                nc = vec3::cross(t.b-t.a, p-t.a);
-
-                bary = vec3(
-                    (vec3::dot(na, t.n))/t.n.sqmag(),
-                    (vec3::dot(nb, t.n))/t.n.sqmag(),
-                    (vec3::dot(nc, t.n))/t.n.sqmag()
-                );
-
-                // std::cout << na << nb << nc << std::endl;
-
-                // Texture coordinate calculations
-                // uv = ta + bary[1](tb - ta) + bary[2](tc - ta)
-                vec3 uv = t.a + bary[1]*(t.b - t.a) + bary[2]*(t.c - t.a);
-
-                if (bary[0] >= 0 && bary[1] >= 0 && bary[2] >= 0) {
-                    // image[y][x] += 1.0;
-                    int u = (int) (uv.x()*TX);
-                    int v = (int) (uv.y()*TY);
-
-                    image[y][x] += texture[v][u];
-                }
-
-                // std::cout << "\r[";
-                // float percent = (float) (y*X + x*SAMPLES_PER_PIXEL + s)/(X*Y*SAMPLES_PER_PIXEL);
-                // int width = (int) (20 * percent);
-                
             }
         }
     }

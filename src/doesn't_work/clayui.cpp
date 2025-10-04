@@ -1,6 +1,6 @@
 #define CLAY_IMPLEMENTATION
 #include "clay.h"
-#include "renderers/raylib/clay_renderer_raylib.c"
+#include "renderers/raylib/clay_renderer_raylib.h"
 
 const Clay_Color COLOR_LIGHT = (Clay_Color) {224, 215, 210, 255};
 

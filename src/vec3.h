@@ -267,5 +267,4 @@ inline vec3 operator/(const vec3& v, double scalar) {
 inline vec3 operator/(double scalar, const vec3& v) {
     return v / scalar;
 }
-
 #endif
