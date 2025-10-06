@@ -7,13 +7,17 @@
  * Returns true if the given ray intersects the sphere
  * @param center 
  */
-bool hit_sphere(const vec3& center, double radius, const ray& r) {
+double hit_sphere(const vec3& center, double radius, const ray& r) {
     vec3 oc = center - r.origin();
-    double a = vec3::dot(r.direction(), r.direction());
-    double b = -2.0 * vec3::dot(r.direction(), oc);
-    double c = vec3::dot(oc, oc) - radius*radius;
-    double discriminant = b*b - 4*a*c;
+    double a = r.direction().sqmag();
+    double h = vec3::dot(r.direction(), oc);
+    double c = oc.sqmag() - radius*radius;
+    double discriminant = h*h - a*c;
 
-    return discriminant >= 0;
+    if (discriminant < 0) {
+        return -1.0;
+    } else {
+        return (h - std::sqrt(discriminant)) / a;
+    }
 }
 #endif

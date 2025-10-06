@@ -5,7 +5,10 @@ OBJ := ./obj
 CXX = g++
 CXXFLAGS = -Wall
 
-all: $(BIN)/imagewriting.exe $(BIN)/barycentric.exe $(BIN)/triangle_texturing.exe $(BIN)/image.exe
+all: $(BIN)/vec3test.exe $(BIN)/imagewriting.exe $(BIN)/barycentric.exe $(BIN)/triangle_texturing.exe $(BIN)/image.exe $(BIN)/sphere.exe 
+
+$(BIN)/vec3test.exe: $(OBJ)/vec3test.o | $(BIN)
+	$(CXX) $(CXXFLAGS) $^ -o $@
 
 $(BIN)/imagewriting.exe: $(OBJ)/imagewriting.o | $(BIN)
 	$(CXX) $(CXXFLAGS) $^ -o $@
@@ -19,6 +22,12 @@ $(BIN)/triangle_texturing.exe: $(OBJ)/barycentric.o | $(BIN)
 $(BIN)/image.exe: $(OBJ)/image.o | $(BIN)
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
+$(BIN)/sphere.exe: $(OBJ)/sphere.o | $(BIN)
+	$(CXX) $(CXXFLAGS) $^ -o $@
+
+$(OBJ)/vec3test.o: $(SRC)/tests/vec3test.cpp $(SRC)/vec3.h | $(OBJ)
+	$(CXX) $< -o $@ -c
+
 $(OBJ)/imagewriting.o: $(SRC)/learning/imagewriting.cpp $(SRC)/vec3.h | $(OBJ)
 	$(CXX) $< -o $@ -c
 
@@ -29,6 +38,9 @@ $(OBJ)/triangle_texturing.o: $(SRC)/learning/triangle_texturing.cpp $(SRC)/vec3.
 	$(CXX) $< -o $@ -c
 
 $(OBJ)/image.o: $(SRC)/learning/image.cpp $(SRC)/image.h | $(OBJ)
+	$(CXX) $< -o $@ -c
+
+$(OBJ)/sphere.o: $(SRC)/learning/sphere.cpp $(SRC)/ray.h $(SRC)/collision.h | $(OBJ)
 	$(CXX) $< -o $@ -c
 
 $(BIN):

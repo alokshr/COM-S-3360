@@ -3,7 +3,6 @@
 #ifndef VEC3_H 
 #define VEC3_H
 
-
 /**
  * 
  * A class for representing 3D vectors
@@ -67,7 +66,7 @@ class vec3 {
         /**
          * Applies a scalar of -1 on this vector
          */
-        inline vec3 operator-() { return vec3(-e[0], -e[1], -e[2]); }
+        inline vec3 operator-() const { return vec3(-e[0], -e[1], -e[2]); }
 
         /**
          * Returns the indexed component of this vector
@@ -89,18 +88,17 @@ class vec3 {
          * Returns the squared magnitude/distance of this vector.
          * Calculates x**2 + y**2 + z**2. Faster than mag().
          */
-        inline double sqmag() const {     
-            return dot(*this, *this);
-        }
+        inline double sqmag() const { return e[0]*e[0] + e[1]*e[1] + e[2]*e[2]; }
 
         /**
-         * Normalizes this vector to have a magnitude of one.
+         * Returns a normalized/length one version of this vector.
          */
-        inline vec3 norm() {
-            e[0] /= this->mag();
-            e[1] /= this->mag();
-            e[2] /= this->mag();
-            return *this;
+        inline vec3 normalize() const {
+            return vec3(
+                e[0] / this->mag(),
+                e[1] / this->mag(),
+                e[2] / this->mag()
+            );
         }
 
         /**
@@ -183,9 +181,9 @@ class vec3 {
          * @param v vec3 to compare
          */
         inline bool operator==(const vec3& v) {
-            return e[0] == v[0] &&
-                    (e[1] == v[1]) &&
-                    (e[2] == v[2]);
+            return  (e[0]-v[0] == 0.0) &&
+                    (e[1]-v[1] == 0.0) &&
+                    (e[2]-v[2] == 0.0);
         }
 
         /**
@@ -193,9 +191,7 @@ class vec3 {
          * @param v vec3 to compare
          */
         inline bool operator!=(const vec3& v) {
-            return e[0] != v[0] ||
-                    (e[1] != v[1]) ||
-                    (e[2] != v[2]);
+            return !(*this == v);
         }
 };
 

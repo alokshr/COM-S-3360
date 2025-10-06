@@ -1,15 +1,15 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 
-#include <iostream>
+#include "renderlib.h"
 #include <fstream>
 #include <vector>
-#include "color.h"
 
 using image = std::vector<std::vector<color>>;
 
 /**
  * Takes a 2D array of float colors ranging from [0, 1] and outputs a .ppm file 
+ * @return 0 on success, -1 on failure
  * @param img an image struct
  * @param filename the name to save the .ppm file as
  */

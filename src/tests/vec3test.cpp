@@ -1,6 +1,6 @@
 #include <iostream>
 #include <cassert>
-#include "vec3.h"
+#include "../vec3.h"
 
 int main(int argc, char** argv) {
     vec3 v1 = vec3();
@@ -15,6 +15,11 @@ int main(int argc, char** argv) {
     assert(v3 == vec3(0, 3, -2));
     assert(vec3::cross(vec3(0,3,2), vec3(0, -2, 3)) == vec3(13, 0, 0));
     assert(vec3(0,3,2) * 2 == vec3(0, 6, 4));
+
+    std::cout << vec3(1,2,3).normalize() << std::endl;
+    std::cout << vec3(0.267261,0.534522,0.801784) << std::endl;
+    
+    assert((vec3(1,2,3).normalize()) == vec3(0.267261,0.534522,0.801784));
 
     vec3 v4;
     v4 = v2;
