@@ -13,12 +13,14 @@ int main(int argc, char const *argv[])
     world.add(make_shared<sphere>(vec3(0, 0, -1), 0.5));
     world.add(make_shared<sphere>(vec3(0, -100.5, -1), 100));
 
-    camera cam(
-        vec3(),
-        100,
-        100,
-        1
-    );
+    camera_config config = {
+        1080,
+        720,
+        1,
+        10
+    };
+
+    camera cam(vec3(), config);
 
     cam.render(world, "camera_img.ppm");
 }

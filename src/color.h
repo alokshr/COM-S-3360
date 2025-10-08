@@ -5,6 +5,7 @@
 #define COLOR_H
 
 #include "vec3.h"
+#include "utils.h"
 
 using color = vec3;
 
@@ -14,9 +15,9 @@ using color = vec3;
  */
 color color_float_to_rgb(color c) {
     return color(
-        (int) (c[0] * 255.99),
-        (int) (c[1] * 255.99),
-        (int) (c[2] * 255.99)
+        (int) (clamp(c[0], 0, 1) * 255.99),
+        (int) (clamp(c[1], 0, 1) * 255.99),
+        (int) (clamp(c[2], 0, 1) * 255.99)
     );
 }
 
@@ -26,9 +27,9 @@ color color_float_to_rgb(color c) {
  */
 color color_rgb_to_float(color c) {
     return color(
-        c[0] / 255.99,
-        c[1] / 255.99,
-        c[2] / 255.99
+        clamp(c[0], 0, 255.99) / 255.99,
+        clamp(c[1], 0, 255.99) / 255.99,
+        clamp(c[2], 0, 255.99) / 255.99
     );
 }
 #endif

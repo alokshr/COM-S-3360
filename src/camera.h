@@ -6,9 +6,21 @@
 #include "collision.h"
 #include "collidable.h"
 
+/**
+ * A struct for configuring common camera settings
+ */
+struct camera_config {
+    int image_width;
+    int image_height;
+    double focal_length;
+    int samples_per_pixel;
+};
+
+/**
+ * A class used to represent a camera in 3D space
+ */
 class camera {
     public:
-
         /**
          * Constructs a default camera
          */
@@ -16,7 +28,8 @@ class camera {
             center(vec3()),
             image_width(480),
             image_height(480),
-            focal_length(1) {
+            focal_length(1),
+            samples_per_pixel(0) {
                 init();
         };
 
@@ -29,14 +42,13 @@ class camera {
          */
         camera(
             vec3 center,
-            int image_width,
-            int image_height,
-            double focal_length
+            camera_config config
         ):
             center(center),
-            image_width(image_width),
-            image_height(image_height),
-            focal_length(focal_length) {
+            image_width(config.image_width),
+            image_height(config.image_height),
+            focal_length(config.focal_length),
+            samples_per_pixel(config.samples_per_pixel) {
                 init();
         }
 
@@ -46,15 +58,28 @@ class camera {
          * @param filename name of file to save rendered image to
          */
         void render(const collidable& world, const char* filename) {
+            const int progress_timer_max = image_height*image_width/20;
+            int progress_timer = 10;
+            bool anti_alias = samples_per_pixel > 0;
             for (int y = 0; y < image_height; y++) {
                 for (int x = 0; x < image_width; x++) {
-                    vec3 pixel_center = pixel00_loc + (x*pixel_delta_u) + (y*pixel_delta_v);
-                    
-                    ray r(center, pixel_center - center);
-
-                    color pixel_color = ray_color(r, world);
-
-                    img[y][x] = pixel_color;
+                    if (progress_timer == 0) {
+                        print_progress(100.0*(y*image_width+x)/(image_width*image_height));
+                        progress_timer = progress_timer_max;
+                    }
+                    progress_timer--;
+                    color pixel_color = color();
+                    if (anti_alias) {
+                        for (int sample = 0; sample < samples_per_pixel; sample++) {
+                            ray r = get_ray(x, y, sample_square());
+                            pixel_color += ray_color(r, world);
+                        }
+                        
+                        img[y][x] = pixel_color/samples_per_pixel;
+                    } else {
+                        ray r = get_ray(x, y, vec3());
+                        img[y][x] = ray_color(r, world);
+                    }
                 }
             }
 
@@ -66,6 +91,13 @@ class camera {
          * The center of the camera in 3D space
          */
         vec3 center;
+
+        /**
+         * The number of samples used for anti-aliasing
+         * 
+         * If set to zero, no anti-aliasing is used
+         */
+        int samples_per_pixel;
 
         /**
          * The width of the final rendered images
@@ -136,6 +168,22 @@ class camera {
             img = image(image_height, std::vector<color>(image_width, color()));
         }
 
+        ray get_ray(int x, int y, vec3 offset) const {
+            vec3 pixel_sample = pixel00_loc
+                + ((x + offset[0])*pixel_delta_u)
+                + ((y + offset[1])*pixel_delta_v);
+
+            return ray(center, pixel_sample-center);
+        }
+
+        vec3 sample_square() const {
+            return vec3(
+                frand() - 0.5,
+                frand() - 0.5,
+                0
+            );
+        }
+
         color ray_color(const ray& r, const collidable& world) const {
             collision_hit rec;
 
@@ -145,7 +193,11 @@ class camera {
 
             vec3 unit_direction = r.direction().normalize();
             auto a = 0.5*(unit_direction.y() + 1.0);
-            return (1.0-a)*color(1.0, 1.0, 1.0) + a*color(0.5, 0.7, 1.0);
+            return lerp(color(1.0, 1.0, 1.0), color(0.5, 0.7, 1.0), a);
+        }
+
+        void print_progress(float percentage) {
+            std::clog << "\rRendering: " << percentage << std::flush;
         }
 };
 
