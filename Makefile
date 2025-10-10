@@ -3,7 +3,7 @@ BIN := ./bin
 OBJ := ./obj
 
 CXX = g++
-CXXFLAGS = -Wall
+CXXFLAGS = -Wall -g
 
 all: $(BIN)/vec3test.exe $(BIN)/imagewriting.exe $(BIN)/barycentric.exe $(BIN)/triangle_texturing.exe $(BIN)/image.exe $(BIN)/sphere.exe 
 
@@ -40,7 +40,7 @@ $(OBJ)/triangle_texturing.o: $(SRC)/learning/triangle_texturing.cpp $(SRC)/vec3.
 $(OBJ)/image.o: $(SRC)/learning/image.cpp $(SRC)/image.h | $(OBJ)
 	$(CXX) $< -o $@ -c
 
-$(OBJ)/sphere.o: $(SRC)/learning/sphere.cpp $(SRC)/ray.h $(SRC)/collision.h $(SRC)/camera.h | $(OBJ)
+$(OBJ)/sphere.o: $(SRC)/learning/sphere.cpp $(SRC)/ray.h $(SRC)/camera.h | $(OBJ)
 	$(CXX) $< -o $@ -c
 
 $(BIN):

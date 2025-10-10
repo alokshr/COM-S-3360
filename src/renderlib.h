@@ -12,7 +12,6 @@
 #include "vec3.h"
 #include "color.h"
 #include "ray.h"
-#include "utils.h"
 #include "interval.h"
 
 #endif

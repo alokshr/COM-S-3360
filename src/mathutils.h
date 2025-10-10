@@ -3,15 +3,10 @@
 #define _USE_MATH_DEFINES
 
 #include <cmath>
-#include "vec3.h"
+#include <random>
 
 const double infinity = std::numeric_limits<double>::infinity();
 const double pi = M_PI;
-
-#define EPSILON 0.00001
-#define cmpfloat(x,y) (abs((x)-(y)) <= (EPSILON))
-#define frand() (rand() / (RAND_MAX+1.0))
-#define frand_range(min, max) (min + (max-min)*frand())
 
 /**
  * Converts degrees to radians
@@ -42,16 +37,6 @@ inline double lerp(double a, double b, double t) {
 }
 
 /**
- * Returns a linearly interpolated vec3 from a to b
- * @param a start vec3
- * @param b end vec3
- * @param t value in range of 0-1 inclusive
- */
-inline vec3 lerp(vec3 v1, vec3 v2, double t) {
-    return (1-t)*v1 + t*v2;
-}
-
-/**
  * Returns the value clamped between min and max
  * @param value value to clamp
  * @param min lower bound
@@ -62,4 +47,23 @@ inline double clamp(double value, double min, double max) {
     if (value > max) return max;
     return value;
 }
+
+/**
+ * Generates a random number between 0 inclusive and 1 exclusive
+ */
+inline double random() {
+    static std::uniform_real_distribution<double> distribution(0.0, 1.0);
+    static std::mt19937 generator;
+    return distribution(generator);
+}
+
+/**
+ * Returns a random number between min inclusive and max exclusive.
+ * @param min lower bound of random number generated, inclusive
+ * @param max upper bound of random number generated, exclusive
+ */
+inline double random(double min, double max) {
+    return min + (max-min)*random();
+}
+
 #endif

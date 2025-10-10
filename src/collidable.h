@@ -3,9 +3,12 @@
 
 #include "renderlib.h"
 
+class material;
+
 struct collision_hit {
     vec3 point;
     vec3 normal;
+    std::shared_ptr<material> mat;
     double t;
     bool front_face;
 

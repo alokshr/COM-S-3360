@@ -5,7 +5,7 @@
 #define COLOR_H
 
 #include "vec3.h"
-#include "utils.h"
+#include "mathutils.h"
 
 using color = vec3;
 

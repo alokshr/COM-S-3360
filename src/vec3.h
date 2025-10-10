@@ -3,6 +3,8 @@
 #ifndef VEC3_H 
 #define VEC3_H
 
+#include "mathutils.h"
+
 /**
  * 
  * A class for representing 3D vectors
@@ -193,6 +195,14 @@ class vec3 {
         inline bool operator!=(const vec3& v) {
             return !(*this == v);
         }
+
+        inline bool near_zero() const {
+            const double s = 1e-8;
+            return 
+                std::fabs(e[0] < s) &&
+                std::fabs(e[1] < s) && 
+                std::fabs(e[2] < s);
+        }
 };
 
 std::ostream& operator<<(std::ostream& os, const vec3& v) {
@@ -216,6 +226,16 @@ inline vec3 operator-(const vec3& lhs, const vec3& rhs) {
     return vec3(lhs[0] - rhs[0],
                 lhs[1] - rhs[1],
                 lhs[2] - rhs[2]);
+}
+
+
+/**
+ * Scales a vector by the given scalar value.
+ */
+inline vec3 operator*(const vec3& u, const vec3& v) {
+    return vec3(u[0]*v[0],
+                u[1]*v[1],
+                u[2]*v[2]);
 }
 
 /**
@@ -263,4 +283,22 @@ inline vec3 operator/(const vec3& v, double scalar) {
 inline vec3 operator/(double scalar, const vec3& v) {
     return v / scalar;
 }
+
+inline vec3 randvec3() {
+    return vec3(random(), random(), random());
+}
+
+inline vec3 randvec3_on_hemisphere(const vec3& normal) {
+    vec3 on_unit_sphere = randvec3().normalize();
+    return (vec3::dot(on_unit_sphere, normal) > 0.0) ? on_unit_sphere : -on_unit_sphere;
+}
+
+inline vec3 reflect(const vec3& incoming, const vec3& normal) {
+    return incoming - 2*vec3::dot(incoming, normal)*normal;
+}
+
+vec3 lerp(vec3 a, vec3 b, double t) {
+    return (1-t)*a + t*b;
+}
+
 #endif

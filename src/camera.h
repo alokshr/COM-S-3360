@@ -1,10 +1,11 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include "renderlib.h"
 #include "image.h"
-#include "collision.h"
 #include "collidable.h"
+#include "material.h"
+
+#define EPSILON 0.001
 
 /**
  * A struct for configuring common camera settings
@@ -14,6 +15,8 @@ struct camera_config {
     int image_height;
     double focal_length;
     int samples_per_pixel;
+    int max_depth;
+    double gamma;
 };
 
 /**
@@ -29,7 +32,9 @@ class camera {
             image_width(480),
             image_height(480),
             focal_length(1),
-            samples_per_pixel(0) {
+            samples_per_pixel(0),
+            max_depth(3),
+            gamma(1) {
                 init();
         };
 
@@ -48,7 +53,9 @@ class camera {
             image_width(config.image_width),
             image_height(config.image_height),
             focal_length(config.focal_length),
-            samples_per_pixel(config.samples_per_pixel) {
+            samples_per_pixel(config.samples_per_pixel),
+            max_depth(config.max_depth),
+            gamma(config.gamma) {
                 init();
         }
 
@@ -68,18 +75,22 @@ class camera {
                         progress_timer = progress_timer_max;
                     }
                     progress_timer--;
+
                     color pixel_color = color();
                     if (anti_alias) {
                         for (int sample = 0; sample < samples_per_pixel; sample++) {
                             ray r = get_ray(x, y, sample_square());
-                            pixel_color += ray_color(r, world);
+                            pixel_color += ray_color(r, world, max_depth);
                         }
-                        
-                        img[y][x] = pixel_color/samples_per_pixel;
+                        pixel_color = linear_to_gamma(pixel_color/samples_per_pixel);
+                        img[y][x] = pixel_color;
                     } else {
                         ray r = get_ray(x, y, vec3());
-                        img[y][x] = ray_color(r, world);
+                        pixel_color = linear_to_gamma(ray_color(r, world, max_depth));
+                        img[y][x] = pixel_color;
                     }
+                    // std::cout << pixel_color << std::endl;
+
                 }
             }
 
@@ -98,6 +109,16 @@ class camera {
          * If set to zero, no anti-aliasing is used
          */
         int samples_per_pixel;
+
+        /**
+         * The maximum number of ray bounces allowed
+         */
+        int max_depth;
+
+        /**
+         * The gamma value used for light correction
+         */
+        double gamma;
 
         /**
          * The width of the final rendered images
@@ -178,17 +199,43 @@ class camera {
 
         vec3 sample_square() const {
             return vec3(
-                frand() - 0.5,
-                frand() - 0.5,
+                random() - 0.5,
+                random() - 0.5,
                 0
             );
         }
 
-        color ray_color(const ray& r, const collidable& world) const {
+        inline double linear_to_gamma(double value) const {
+            return (value > 0) ? pow(value, 1.0/gamma) : 0;
+        }
+
+        inline color linear_to_gamma(color c) const {
+            return color(
+                linear_to_gamma(c[0]),
+                linear_to_gamma(c[1]),
+                linear_to_gamma(c[2])
+            );
+        }
+
+        color ray_color(const ray& r, const collidable& world, int depth) const {
+            if (depth <= 0) {
+                return color();
+            }
+
             collision_hit rec;
 
-            if (world.hit(r, interval(0, infinity), rec)) {
-                return 0.5 * (rec.normal + color(1,1,1));
+            if (world.hit(r, interval(EPSILON, infinity), rec)) {
+                ray scattered;
+                color attenuation;
+
+                if (rec.mat->scatter(r, rec, attenuation, scattered)) {
+                    return attenuation * ray_color(scattered, world, depth-1);
+                }
+                
+                return color(0, 0, 0);
+
+                // Return normal as color
+                // return 0.5 * (rec.normal + color(1,1,1));
             }
 
             vec3 unit_direction = r.direction().normalize();
