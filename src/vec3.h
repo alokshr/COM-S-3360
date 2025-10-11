@@ -293,12 +293,18 @@ inline vec3 randvec3_on_hemisphere(const vec3& normal) {
     return (vec3::dot(on_unit_sphere, normal) > 0.0) ? on_unit_sphere : -on_unit_sphere;
 }
 
-inline vec3 reflect(const vec3& incoming, const vec3& normal) {
-    return incoming - 2*vec3::dot(incoming, normal)*normal;
-}
-
 vec3 lerp(vec3 a, vec3 b, double t) {
     return (1-t)*a + t*b;
 }
 
+inline vec3 reflect(const vec3& incoming, const vec3& normal) {
+    return incoming - 2*vec3::dot(incoming, normal)*normal;
+}
+
+inline vec3 refract(const vec3& uv, const vec3& normal, double etai_over_etat) {
+    double cos_theta = std::fmin(vec3::dot(-uv, normal), 1.0);
+    vec3 r_out_perp =  etai_over_etat * (uv + cos_theta*normal);
+    vec3 r_out_parallel = -std::sqrt(std::fabs(1.0 - r_out_perp.sqmag())) * normal;
+    return r_out_perp + r_out_parallel;
+}
 #endif
