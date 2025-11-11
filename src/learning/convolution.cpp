@@ -61,25 +61,37 @@ double sobel_y[3][3] = {
     {-1, -2, -1},
 };
 
-void convolve(double k[3][3]) {
+double blur[3][3] = {
+    { .0625,  .125,  .0625},
+    { .125,   .25,   .125},
+    { .0625,  .125,  .0625},
+};
+
+double sharpen[3][3] = {
+    {  0,  -1,   0},
+    { -1,   4,  -1},
+    {  0,  -1,   0},
+};
+
+void convolve(double img[SIZE][SIZE], double k[3][3], double output[SIZE][SIZE]) {
     int i, j;
 
     for (i = 0; i < SIZE; i++) {
-        out[i][0] = out[0][i] = out[i][SIZE-1] = out[SIZE-1][i] = 0;
+        output[i][0] = output[0][i] = output[i][SIZE-1] = output[SIZE-1][i] = 0;
     }
 
     for (j = 1; j < SIZE - 1; j++) {
         for (i = 1; i < SIZE - 1; i++) {
-            out[j][i] = (
-                image[j - 1][i - 1] * k[0][0] +
-                image[j - 1][i    ] * k[0][1] +
-                image[j - 1][i + 1] * k[0][2] +
-                image[j    ][i - 1] * k[1][0] +
-                image[j    ][i    ] * k[1][1] +
-                image[j    ][i + 1] * k[1][2] +
-                image[j + 1][i - 1] * k[2][0] +
-                image[j + 1][i    ] * k[2][1] +
-                image[j + 1][i + 1] * k[2][2]
+            output[j][i] = (
+                img[j - 1][i - 1] * k[0][0] +
+                img[j - 1][i    ] * k[0][1] +
+                img[j - 1][i + 1] * k[0][2] +
+                img[j    ][i - 1] * k[1][0] +
+                img[j    ][i    ] * k[1][1] +
+                img[j    ][i + 1] * k[1][2] +
+                img[j + 1][i - 1] * k[2][0] +
+                img[j + 1][i    ] * k[2][1] +
+                img[j + 1][i + 1] * k[2][2]
             );
         }
     }
@@ -89,8 +101,11 @@ int main(int argc, char const *argv[])
 {
     load_pgm();
 
-    convolve(sobel_x);
-    // convolve(sobel_y);
+    // convolve(image, blur, out);
+    convolve(image, sharpen, out);
+
+    // convolve(image, sobel_x, out);
+    // convolve(image, sobel_y, out);
 
     write_pgm(out);
     
