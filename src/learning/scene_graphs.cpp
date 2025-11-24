@@ -120,8 +120,8 @@ int main(int argc, char const *argv[])
     for (y = 0; y < Y; y++) {
         for (x = 0; x < X; x++) {
             for (s = 0; s < SAMPLES_PER_PIXEL; s++) {
-                for (i = 0; i < i; i++) {
-                    triangle t = t2;
+                for (i = 0; i < 1; i++) {
+                    triangle t = t1;
                     /*
                     switch (s) {
                         case 0:
@@ -180,13 +180,13 @@ int main(int argc, char const *argv[])
                     vec3 uv = t.a + bary[1]*(t.b - t.a) + bary[2]*(t.c - t.a);
 
                     if (bary[0] >= 0 && bary[1] >= 0 && bary[2] >= 0) {
-                        image[y][x] += 1.0;
-                        // int u = (int) (uv.x()*TX);
-                        // std::cout << u << std::endl;
-                        // int v = TY - ((int) (uv.y()*TY));
+                        // image[y][x] += 1.0;
+                        int u = (int) (uv.x()*TX);
+                        int v = TY - ((int) (uv.y()*TY));
 
+                        std::cout << u << std::endl;
 
-                        // image[y][x] += texture[v][u];
+                        image[y][x] += texture[v][u];
                         // std::cout << texture[v][u] << ", " << image[y][x] << std::endl;
                     }
 

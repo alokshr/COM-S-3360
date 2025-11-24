@@ -16,7 +16,7 @@ $(BIN)/imagewriting.exe: $(OBJ)/imagewriting.o | $(BIN)
 $(BIN)/barycentric.exe: $(OBJ)/barycentric.o | $(BIN)
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
-$(BIN)/triangle_texturing.exe: $(OBJ)/barycentric.o | $(BIN)
+$(BIN)/triangle_texturing.exe: $(OBJ)/triangle_texturing.o | $(BIN)
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
 $(BIN)/image.exe: $(OBJ)/image.o | $(BIN)
@@ -34,13 +34,13 @@ $(OBJ)/imagewriting.o: $(SRC)/learning/imagewriting.cpp $(SRC)/vec3.h | $(OBJ)
 $(OBJ)/barycentric.o: $(SRC)/learning/barycentric.cpp $(SRC)/vec3.h | $(OBJ)
 	$(CXX) $< -o $@ -c
 
-$(OBJ)/triangle_texturing.o: $(SRC)/learning/triangle_texturing.cpp $(SRC)/vec3.h | $(OBJ)
+$(OBJ)/triangle_texturing.o: $(SRC)/learning/triangle_texturing.cpp $(SRC)/vec3.h $(SRC)/quaternion.h | $(OBJ)
 	$(CXX) $< -o $@ -c
 
 $(OBJ)/image.o: $(SRC)/learning/image.cpp $(SRC)/image.h | $(OBJ)
 	$(CXX) $< -o $@ -c
 
-$(OBJ)/sphere.o: $(SRC)/learning/sphere.cpp $(SRC)/ray.h $(SRC)/camera.h | $(OBJ)
+$(OBJ)/sphere.o: $(SRC)/learning/sphere.cpp $(SRC)/ray.h $(SRC)/camera.h $(SRC)/material.h | $(OBJ)
 	$(CXX) $< -o $@ -c
 
 $(BIN):

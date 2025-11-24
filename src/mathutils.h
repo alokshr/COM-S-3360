@@ -1,12 +1,11 @@
 #ifndef UTILS_H
 #define UTILS_H
-#define _USE_MATH_DEFINES
 
+#define _USE_MATH_DEFINES
 #include <cmath>
 #include <random>
 
 const double infinity = std::numeric_limits<double>::infinity();
-const double pi = M_PI;
 
 /**
  * Converts degrees to radians
@@ -14,7 +13,7 @@ const double pi = M_PI;
  * @return value in radians
  */
 inline double d2r(double degrees) {
-    return degrees * pi/180.0;
+    return degrees * M_PI/180.0;
 }
 
 /**
@@ -23,7 +22,7 @@ inline double d2r(double degrees) {
  * @return value in degrees
  */
 inline double r2d(double radians) {
-    return radians * 180.0/pi;
+    return radians * 180.0/M_PI;
 }
 
 /**
