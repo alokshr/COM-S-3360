@@ -13,6 +13,7 @@
 struct camera_config {
     int image_width;
     int image_height;
+    double vfov;
     double focal_length;
     int samples_per_pixel;
     int max_depth;
@@ -31,6 +32,7 @@ class camera {
             center(vec3()),
             image_width(480),
             image_height(480),
+            vfov(90),
             focal_length(1),
             samples_per_pixel(0),
             max_depth(3),
@@ -131,6 +133,11 @@ class camera {
         int image_height;
 
         /**
+         * The vertical degrees of vision
+         */
+        double vfov;
+
+        /**
          * The distance from the camera's center to the viewport
          */
         double focal_length;
@@ -170,7 +177,9 @@ class camera {
 
             // Determine viewport dimensions.
             double focal_length = 1.0;
-            double viewport_height = 2.0;
+            double theta = d2r(vfov);
+            double h = std::tan(theta/2.0);
+            double viewport_height = 2.0 * h * focal_length;
             double viewport_width = viewport_height * (double(image_width)/image_height);
 
             // Calculate the vectors across the horizontal and down the vertical viewport edges.
