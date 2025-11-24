@@ -37,15 +37,18 @@ int main(int argc, char const *argv[])
     world.add(make_shared<sphere>(vec3( 1.0,    0.0, -1.0),   0.5, material_right));
 
     camera_config config = {
-        1080,   //    int image_width;
-        720,    //    int image_height;
-        1,      //    double focal_length;
-        100,     //    int samples_per_pixel;
-        50,     //    int max_depth;
-        2       //    double gamma;
+        1080,           //  int image_width;
+        720,            //  int image_height;
+        90,             //  double vfov;
+        vec3(-2, 2, 1), //  vec3 lookfrom;
+        vec3(0, 0, -1), //  vec3 lookat;
+        vec3(0, 1, 0),  //  vec3 up;
+        10,             //  int samples_per_pixel;
+        50,             //  int max_depth;
+        2               //  double gamma;
     };
 
-    camera cam(vec3(), config);
+    camera cam(config);
 
     cam.render(world, "camera_img.ppm");
 }

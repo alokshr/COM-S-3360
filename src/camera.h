@@ -14,7 +14,7 @@ struct camera_config {
     int image_width;
     int image_height;
     double vfov;
-    double focal_length;
+    vec3 lookfrom, lookat, up;
     int samples_per_pixel;
     int max_depth;
     double gamma;
@@ -28,12 +28,13 @@ class camera {
         /**
          * Constructs a default camera
          */
-        camera():
-            center(vec3()),
+        camera():    
+            lookfrom(vec3()),
+            lookat(vec3(0, 0, 1)),
+            up(vec3(0,1,0)),
             image_width(480),
             image_height(480),
             vfov(90),
-            focal_length(1),
             samples_per_pixel(0),
             max_depth(3),
             gamma(1) {
@@ -42,19 +43,17 @@ class camera {
 
         /**
          * Constructs a camera with given settings
-         * @param center the center of the camera in 3D space
-         * @param image_width the width of the rendered image
-         * @param image_height the height of the rendered image
-         * @param focal_length the distance from the center to the viewport
+         * @param config configuration settings of the camera
          */
         camera(
-            vec3 center,
             camera_config config
         ):
-            center(center),
+            lookfrom(config.lookfrom),
+            lookat(config.lookat),
+            up(config.up),
             image_width(config.image_width),
             image_height(config.image_height),
-            focal_length(config.focal_length),
+            vfov(config.vfov),
             samples_per_pixel(config.samples_per_pixel),
             max_depth(config.max_depth),
             gamma(config.gamma) {
@@ -104,6 +103,22 @@ class camera {
          * The center of the camera in 3D space
          */
         vec3 center;
+        vec3 lookfrom;
+
+        /**
+         * The point where the camera's focal point lies
+         */
+        vec3 lookat;
+
+        /**
+         * The direction that the camera considered up
+         */
+        vec3 up;
+
+        /**
+         * The camera's basis vectors
+         */
+        vec3 i, j, k;
 
         /**
          * The number of samples used for anti-aliasing
@@ -138,11 +153,6 @@ class camera {
         double vfov;
 
         /**
-         * The distance from the camera's center to the viewport
-         */
-        double focal_length;
-
-        /**
          * The width of the camera's viewport
          */
         double viewport_width;
@@ -173,18 +183,22 @@ class camera {
         image img;
 
         void init() {
-            center = vec3(0, 0, 0);
+            center = lookfrom;
 
             // Determine viewport dimensions.
-            double focal_length = 1.0;
+            double focal_length = (lookfrom-lookat).mag();
             double theta = d2r(vfov);
             double h = std::tan(theta/2.0);
             double viewport_height = 2.0 * h * focal_length;
             double viewport_width = viewport_height * (double(image_width)/image_height);
 
             // Calculate the vectors across the horizontal and down the vertical viewport edges.
-            vec3 viewport_u = vec3(viewport_width, 0, 0);
-            vec3 viewport_v = vec3(0, -viewport_height, 0);
+            k = (lookfrom-lookat).normalize();
+            i = vec3::cross(up, k).normalize();
+            j = vec3::cross(k, i);
+
+            vec3 viewport_u = viewport_width * i;
+            vec3 viewport_v = -viewport_height * j;
 
             // Calculate the horizontal and vertical delta vectors from pixel to pixel.
             pixel_delta_u = viewport_u / image_width;
@@ -192,7 +206,7 @@ class camera {
 
             // Calculate the location of the upper left pixel.
             vec3 viewport_upper_left =
-                center - vec3(0, 0, focal_length) - viewport_u/2 - viewport_v/2;
+                center - focal_length*k - viewport_u/2 - viewport_v/2;
             pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
             img = image(image_height, std::vector<color>(image_width, color()));
@@ -242,9 +256,6 @@ class camera {
                 }
                 
                 return color(0, 0, 0);
-
-                // Return normal as color
-                // return 0.5 * (rec.normal + color(1,1,1));
             }
 
             vec3 unit_direction = r.direction().normalize();
