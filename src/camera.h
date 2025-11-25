@@ -4,6 +4,7 @@
 #include "image.h"
 #include "collidable.h"
 #include "material.h"
+#include "mathutils.h"
 
 #define EPSILON 0.001
 
@@ -17,6 +18,8 @@ struct camera_config {
     vec3 lookfrom, lookat, up;
     int samples_per_pixel;
     int max_depth;
+    double defocus_angle;
+    double focus_dist;
     double gamma;
 };
 
@@ -37,6 +40,8 @@ class camera {
             vfov(90),
             samples_per_pixel(0),
             max_depth(3),
+            defocus_angle(0),
+            focus_dist(10),
             gamma(1) {
                 init();
         };
@@ -56,6 +61,8 @@ class camera {
             vfov(config.vfov),
             samples_per_pixel(config.samples_per_pixel),
             max_depth(config.max_depth),
+            defocus_angle(config.defocus_angle),
+            focus_dist(config.focus_dist),
             gamma(config.gamma) {
                 init();
         }
@@ -90,11 +97,9 @@ class camera {
                         pixel_color = linear_to_gamma(ray_color(r, world, max_depth));
                         img[y][x] = pixel_color;
                     }
-                    // std::cout << pixel_color << std::endl;
-
                 }
             }
-
+            std::cout << "\n";
             output_ppm_image(img, filename);
         }
 
@@ -138,6 +143,16 @@ class camera {
         double gamma;
 
         /**
+         * Max angle of rays casted from the camera's defocus disk
+         */
+        double defocus_angle;
+
+        /**
+         * The distance from the camera where all "incoming" light rays converge
+         */
+        double focus_dist;
+
+        /**
          * The width of the final rendered images
          */
         int image_width;
@@ -163,19 +178,19 @@ class camera {
         double viewport_height;
 
         /**
-         * The location of pixel (0,0)
+         * The location of the viewport's (0,0) pixel
          */
         vec3 pixel00_loc;
 
         /**
-         * The offset to the pixel to the right
+         * The horizontal and vertical offset to the next pixel of the viewport
          */
-        vec3 pixel_delta_u;
+        vec3 pixel_delta_u, pixel_delta_v;
 
         /**
-         * The offset to the pixel below
+         * The horizontal and vertical radius of the defocus disk
          */
-        vec3 pixel_delta_v;
+        vec3 defocus_disk_u, defocus_disk_v;
 
         /**
          * The image that is rendered by this camera
@@ -186,10 +201,9 @@ class camera {
             center = lookfrom;
 
             // Determine viewport dimensions.
-            double focal_length = (lookfrom-lookat).mag();
             double theta = d2r(vfov);
             double h = std::tan(theta/2.0);
-            double viewport_height = 2.0 * h * focal_length;
+            double viewport_height = 2.0 * h * focus_dist;
             double viewport_width = viewport_height * (double(image_width)/image_height);
 
             // Calculate the vectors across the horizontal and down the vertical viewport edges.
@@ -206,8 +220,12 @@ class camera {
 
             // Calculate the location of the upper left pixel.
             vec3 viewport_upper_left =
-                center - focal_length*k - viewport_u/2 - viewport_v/2;
+                center - focus_dist*k - viewport_u/2 - viewport_v/2;
             pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+
+            double defocus_radius = focus_dist * std::tan(d2r(defocus_angle/2.0));
+            defocus_disk_u = i * defocus_radius;
+            defocus_disk_v = j * defocus_radius;
 
             img = image(image_height, std::vector<color>(image_width, color()));
         }
@@ -217,7 +235,9 @@ class camera {
                 + ((x + offset[0])*pixel_delta_u)
                 + ((y + offset[1])*pixel_delta_v);
 
-            return ray(center, pixel_sample-center);
+            vec3 ray_origin = (defocus_angle > 0) ? defocus_disk_sample() : center;
+
+            return ray(ray_origin, pixel_sample-ray_origin);
         }
 
         vec3 sample_square() const {
@@ -228,10 +248,30 @@ class camera {
             );
         }
 
+        /**
+         * Returns a uniformly sampled point inside of a unit circle
+         * @return vec3 with the coords in the x and y components, z is 0  
+         */
+        vec3 rand_in_unit_circle() const {
+            double theta = sqrt(random())*2*M_PI;
+            return random()*vec3(cos(theta), sin(theta), 0);
+        }
+
+        vec3 defocus_disk_sample() const {
+            vec3 p = rand_in_unit_circle();
+            return center + p[0]*defocus_disk_u + p[1]*defocus_disk_v;
+        }
+
+        /**
+         * Scales a scalar value to the camera's gamma scale
+         */
         inline double linear_to_gamma(double value) const {
             return (value > 0) ? pow(value, 1.0/gamma) : 0;
         }
 
+        /**
+         * Scales a vec3 to the camera's gamma scale
+         */
         inline color linear_to_gamma(color c) const {
             return color(
                 linear_to_gamma(c[0]),
@@ -240,6 +280,12 @@ class camera {
             );
         }
 
+        /**
+         * Returns the final color of a ray after bouncing off of a collidable object
+         * @param r ray to project
+         * @param world object to collide with
+         * @param depth number of bounces before stopping and returning white for the last color
+         */
         color ray_color(const ray& r, const collidable& world, int depth) const {
             if (depth <= 0) {
                 return color();
