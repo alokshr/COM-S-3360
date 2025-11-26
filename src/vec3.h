@@ -292,8 +292,12 @@ inline vec3 randvec3(double min, double max) {
     return vec3(random(min, max), random(min, max), random(min, max));
 }
 
+inline vec3 randvec3_normal() {
+    return vec3(random_normal(), random_normal(), random_normal());
+}
+
 inline vec3 randvec3_on_hemisphere(const vec3& normal) {
-    vec3 on_unit_sphere = randvec3().normalize();
+    vec3 on_unit_sphere = randvec3_normal().normalize();
     return (vec3::dot(on_unit_sphere, normal) > 0.0) ? on_unit_sphere : -on_unit_sphere;
 }
 

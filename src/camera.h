@@ -1,6 +1,7 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+#include "thread_pool.h"
 #include "image.h"
 #include "collidable.h"
 #include "material.h"
@@ -71,36 +72,72 @@ class camera {
          * Renders a collidable object and outputs the rendered image to given filename
          * @param world collidable or collidable_list to render
          * @param filename name of file to save rendered image to
+         * @param num_threads the number of threads to run to render the image,
+         *                    values less than 1 default to a singly-threaded render
          */
-        void render(const collidable& world, const char* filename) {
-            const int progress_timer_max = image_height*image_width/20;
-            int progress_timer = 10;
-            bool anti_alias = samples_per_pixel > 0;
-            for (int y = 0; y < image_height; y++) {
-                for (int x = 0; x < image_width; x++) {
-                    if (progress_timer == 0) {
-                        print_progress(100.0*(y*image_width+x)/(image_width*image_height));
-                        progress_timer = progress_timer_max;
-                    }
-                    progress_timer--;
+        void render(const collidable& world, const char* filename, int num_threads = 1) {
+            std::clog << "Rendering " << filename << " using " << ((num_threads > 1) ? num_threads : 1) << " threads:" << std::endl;
+            const bool anti_alias = samples_per_pixel > 0;
+            print_progress(0);
 
-                    color pixel_color = color();
-                    if (anti_alias) {
-                        for (int sample = 0; sample < samples_per_pixel; sample++) {
-                            ray r = get_ray(x, y, sample_square());
-                            pixel_color += ray_color(r, world, max_depth);
-                        }
-                        pixel_color = linear_to_gamma(pixel_color/samples_per_pixel);
-                        img[y][x] = pixel_color;
-                    } else {
-                        ray r = get_ray(x, y, vec3());
-                        pixel_color = linear_to_gamma(ray_color(r, world, max_depth));
-                        img[y][x] = pixel_color;
+            if (num_threads > 1) {
+                // Distribute each pixel's render as a job for threads
+                thread_pool pool = thread_pool(num_threads);
+
+                for (int y = 0; y < image_height; y++) {
+                    for (int x = 0; x < image_width; x++) {
+                        pool.enqueue([this, x, y, &world, anti_alias]{
+                            render_pixel(x, y, world, anti_alias);
+                        });
+                    }
+                }
+
+                int progress = 0;
+                while (pool.get_progress_percent() < 1) {
+                    int current_progress = pool.get_progress_percent()*100;
+                    // std::clog << current_progress << std::endl;
+
+                    if (current_progress != progress) {
+                        progress = current_progress;
+                        print_progress(progress);
+                    } 
+                }
+            } else {
+                int progress = 0;
+
+                for (int y = 0; y < image_height; y++) {
+                    for (int x = 0; x < image_width; x++) {
+                        render_pixel(x, y, world, anti_alias);
+
+                        int current_progress = 100*(y * image_width + x)/(image_width*image_height);
+
+                        if (current_progress != progress) {
+                            progress = current_progress;
+                            print_progress(progress);
+                        } 
                     }
                 }
             }
-            std::cout << "\n";
+            
+            print_progress(100);
+            std::clog << "\n";
             output_ppm_image(img, filename);
+        }
+
+
+        void render_pixel(int x, int y, const collidable& world, bool anti_alias) {
+            color pixel_color = color();
+            if (anti_alias) {
+                for (int sample = 0; sample < samples_per_pixel; sample++) {
+                    ray r = get_ray(x, y, sample_square());
+                    pixel_color += ray_color(r, world, max_depth);
+                }
+                pixel_color = linear_to_gamma(pixel_color/samples_per_pixel);
+            } else {
+                ray r = get_ray(x, y, vec3());
+                pixel_color = linear_to_gamma(ray_color(r, world, max_depth));
+            }
+            img[y][x] = pixel_color;
         }
 
     private:
@@ -202,7 +239,7 @@ class camera {
 
             // Determine viewport dimensions.
             double theta = d2r(vfov);
-            double h = std::tan(theta/2.0);
+            double h = tan(theta/2.0);
             double viewport_height = 2.0 * h * focus_dist;
             double viewport_width = viewport_height * (double(image_width)/image_height);
 
@@ -223,7 +260,7 @@ class camera {
                 center - focus_dist*k - viewport_u/2 - viewport_v/2;
             pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
-            double defocus_radius = focus_dist * std::tan(d2r(defocus_angle/2.0));
+            double defocus_radius = focus_dist * tan(d2r(defocus_angle/2.0));
             defocus_disk_u = i * defocus_radius;
             defocus_disk_v = j * defocus_radius;
 
@@ -309,8 +346,8 @@ class camera {
             return lerp(color(1.0, 1.0, 1.0), color(0.5, 0.7, 1.0), a);
         }
 
-        void print_progress(float percentage) {
-            std::clog << "\rRendering: " << percentage << std::flush;
+        void print_progress(int progress) {
+            std::clog << "\rRendering: [" << std::string(progress / 2, '#') << std::string(50 - progress / 2, '-') << "] " << progress << "%" << std::flush;
         }
 };
 

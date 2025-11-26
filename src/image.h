@@ -40,7 +40,7 @@ int output_ppm_image(image img, const char* filename) {
 
     file.close();
     
-    std::cout << "Successfully saved to " << filename << std::endl;
+    std::clog << "Successfully saved to " << filename << std::endl;
     return 0;
 }
 
