@@ -3,6 +3,7 @@
 #include "../camera.h"
 #include "../collidable_list.h"
 #include "../sphere.h"
+#include "../kd_tree.h"
 
 int main(int argc, char const *argv[])
 {
@@ -102,6 +103,8 @@ int main(int argc, char const *argv[])
     auto material3 = make_shared<metal>(color(0.7, 0.6, 0.5), 0.0);
     world_orbfield.add(make_shared<sphere>(vec3(4, 1, 0), 1.0, material3));
 
+    world_mattest = collidable_list(make_shared<kd_tree>(world_mattest));
+    world_orbfield = collidable_list(make_shared<kd_tree>(world_orbfield));
 
     camera cam_mattest(config_mattest);
     camera cam_orbfield(config_orbfield);

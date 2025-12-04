@@ -58,8 +58,8 @@ inline double random() {
 
 /**
  * Returns a random number between min inclusive and max exclusive.
- * @param min lower bound of random number generated, inclusive
- * @param max upper bound of random number generated, exclusive
+ * @param min lower bound, inclusive
+ * @param max upper bound, exclusive
  */
 inline double random(double min, double max) {
     return min + (max-min)*random();
@@ -72,6 +72,15 @@ inline double random_normal() {
     static std::normal_distribution<double> distribution(0.0, 1.0);
     static std::mt19937 generator;
     return distribution(generator);
+}
+
+/**
+ * Generates a random integer between min and max inclusive
+ * @param min lower bound
+ * @param max upper bound
+ */
+inline int random_int(int min, int max) {
+    return int(random(min, max+1));
 }
 
 #endif

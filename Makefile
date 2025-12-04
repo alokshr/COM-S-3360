@@ -40,7 +40,7 @@ $(OBJ)/triangle_texturing.o: $(SRC)/learning/triangle_texturing.cpp $(SRC)/vec3.
 $(OBJ)/image.o: $(SRC)/learning/image.cpp $(SRC)/image.h | $(OBJ)
 	$(CXX) $< -o $@ -c
 
-$(OBJ)/sphere.o: $(SRC)/learning/sphere.cpp $(SRC)/ray.h $(SRC)/camera.h $(SRC)/material.h $(SRC)/thread_pool.h | $(OBJ)
+$(OBJ)/sphere.o: $(SRC)/learning/sphere.cpp $(SRC)/ray.h $(SRC)/camera.h $(SRC)/material.h $(SRC)/thread_pool.h $(SRC)/kd_tree.h | $(OBJ)
 	$(CXX) $< -o $@ -c
 
 $(BIN):
