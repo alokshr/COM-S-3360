@@ -9,8 +9,15 @@
 #include <queue>
 #include <atomic>
 
+/**
+ * A class for handling parallel threads and tasks
+ */
 class thread_pool {
     public:
+        /**
+         * Creates a thread pool
+         * @param num_threads number of threads to use
+         */
         thread_pool(size_t num_threads = std::thread::hardware_concurrency()) : stop(false), total_tasks(0), completed_tasks(0) {
             // Create threads
             for (size_t i = 0; i < num_threads; i++) {
@@ -44,6 +51,9 @@ class thread_pool {
             }
         }
 
+        /**
+         * Destroys and cleans up this thread pool
+         */
         ~thread_pool() {
             {
                 // Lock the task queue to update the stop flag safely
@@ -60,6 +70,10 @@ class thread_pool {
             }
         }
 
+        /**
+         * Adds a task to this thread pool
+         * @param task function/task to run 
+         */
         void enqueue(std::function<void()> task) {
             {
                 std::unique_lock<std::mutex> lock(mutex);
@@ -69,6 +83,10 @@ class thread_pool {
             condition_variable.notify_one();
         }
 
+        /**
+         * Returns the percentage of tasks completed
+         * @return percentage of tasks completed
+         */
         double get_progress_percent() {
             return (total_tasks == 0) ? 1 : static_cast<double>(completed_tasks)/total_tasks;
         }
