@@ -3,6 +3,7 @@
 
 #include "renderlib.h"
 #include "collidable.h"
+#include "aabb.h"
 
 #include <vector>
 
@@ -18,6 +19,7 @@ class collidable_list : public collidable {
 
         void add(shared_ptr<collidable> object) {
             objects.push_back(object);
+            bbox = aabb(bbox, object->bounding_box());
         }
 
         void clear() {
@@ -39,5 +41,7 @@ class collidable_list : public collidable {
 
             return hit_anything;
         }
+    private:
+        aabb bbox;
 };
 #endif

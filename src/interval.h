@@ -25,6 +25,16 @@ class interval {
         interval(double min, double max): min(min), max(max) {}
 
         /**
+         * Creates an interval that tightly bounds around two given intervals
+         * @param a interval to surround
+         * @param b interval to surround
+         */
+        interval(const interval& a, const interval& b) {
+            min = a.min <= b.min ? a.min : b.min;
+            max = a.max >= b.max ? a.max : b.max;
+        }
+
+        /**
          * Returns the size of this interval
          * @return size between the min and max of this interval
          */
@@ -48,6 +58,16 @@ class interval {
          */
         bool surrounds(double value) const {
             return min < value && value < max;
+        }
+
+        /**
+         * Returns an interval increased in both directions by delta/2
+         * @param delta amount to increase by
+         * @return a new interval expanded by delta/2 in both directions
+         */
+        interval expand(double delta) const {
+            auto padding = delta/2;
+            return interval(min - padding, max + padding);
         }
 
         /**

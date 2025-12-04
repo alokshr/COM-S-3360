@@ -14,7 +14,8 @@ class sphere : public collidable {
             center(center),
             radius(std::fmax(0,radius)),
             mat(mat) {
-
+            vec3 rad = vec3(radius, radius, radius);
+            bbox = aabb(center-rad, center+rad);
         }
 
         bool hit(const ray& r, interval ray_t, collision_hit& rec) const {
@@ -45,9 +46,12 @@ class sphere : public collidable {
             return true;
         }
 
+        aabb bounding_box() const override { return bbox; }
+
     private:
         vec3 center;
         double radius;
         std::shared_ptr<material> mat;
+        aabb bbox;
 };
 #endif
