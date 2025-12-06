@@ -15,7 +15,14 @@ class kd_tree : public collidable {
         kd_tree(collidable_list list) : kd_tree(list.objects, 0, list.objects.size()) {}
 
         kd_tree(std::vector<shared_ptr<collidable>>& objects, size_t start, size_t end) {
-            int axis = random_int(0, 2);
+            bbox = aabb::empty;
+
+            for (size_t idx = start; idx < end; idx++) {
+                bbox = aabb(bbox, objects[idx]->bounding_box());
+            }
+            
+            int axis = bbox.longest_axis();
+
             auto comp = (axis == 1) ? aabb_comp_y : (axis == 2) ? aabb_comp_z : aabb_comp_x;
 
             size_t range = end - start;

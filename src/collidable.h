@@ -14,6 +14,7 @@ struct collision_hit {
     vec3 normal;
     std::shared_ptr<material> mat;
     double t;
+    double u, v;
     bool front_face;
 
     /** Sets the hit record normal vector.

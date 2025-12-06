@@ -24,7 +24,7 @@ int main(int argc, char const *argv[])
     camera_config config_mattest = {
         1080,           //  int image_width;
         720,            //  int image_height;
-        20,             //  double vfov;
+        90,             //  double vfov;
         vec3(-2, 2, 1), //  vec3 lookfrom;
         vec3(0, 0, -1), //  vec3 lookat;
         vec3(0, 1, 0),  //  vec3 up;
@@ -55,7 +55,7 @@ int main(int argc, char const *argv[])
         vec3(13, 2, 3), //  vec3 lookfrom;
         vec3(0, 0, 0),  //  vec3 lookat;
         vec3(0, 1, 0),  //  vec3 up;
-        1,              //  int samples_per_pixel;
+        10,              //  int samples_per_pixel;
         50,             //  int max_depth;
         0.6,            //  double defocus_angle;
         10,             //  double defocus_dist;
@@ -63,8 +63,12 @@ int main(int argc, char const *argv[])
     };
 
     collidable_list world_orbfield;
-    auto ground_material = make_shared<lambertian>(color(0.5, 0.5, 0.5));
-    world_orbfield.add(make_shared<sphere>(vec3(0,-1000,0), 1000, ground_material));
+    // auto ground_material = make_shared<lambertian>(color(0.5, 0.5, 0.5));
+    // world_orbfield.add(make_shared<sphere>(vec3(0,-1000,0), 1000, ground_material));
+
+    auto checker = make_shared<checker_texture>(0.32, color(.2, .3, .1), color(.9, .9, .9));
+    world_orbfield.add(make_shared<sphere>(vec3(0,-1000,0), 1000, make_shared<lambertian>(checker)));
+
 
     for (int a = -11; a < 11; a++) {
         for (int b = -11; b < 11; b++) {

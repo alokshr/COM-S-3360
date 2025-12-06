@@ -5,7 +5,7 @@ OBJ := ./obj
 CXX = g++
 CXXFLAGS = -Wall -g
 
-all: $(BIN)/vec3test.exe $(BIN)/imagewriting.exe $(BIN)/barycentric.exe $(BIN)/triangle_texturing.exe $(BIN)/image.exe $(BIN)/sphere.exe 
+all: $(BIN)/vec3test.exe $(BIN)/imagewriting.exe $(BIN)/barycentric.exe $(BIN)/triangle_texturing.exe $(BIN)/image.exe $(BIN)/sphere.exe $(BIN)/main.exe 
 
 $(BIN)/vec3test.exe: $(OBJ)/vec3test.o | $(BIN)
 	$(CXX) $(CXXFLAGS) $^ -o $@
@@ -25,6 +25,9 @@ $(BIN)/image.exe: $(OBJ)/image.o | $(BIN)
 $(BIN)/sphere.exe: $(OBJ)/sphere.o | $(BIN)
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
+$(BIN)/main.exe: $(OBJ)/main.o | $(BIN)
+	$(CXX) $(CXXFLAGS) $^ -o $@
+
 $(OBJ)/vec3test.o: $(SRC)/tests/vec3test.cpp $(SRC)/vec3.h | $(OBJ)
 	$(CXX) $< -o $@ -c
 
@@ -41,6 +44,9 @@ $(OBJ)/image.o: $(SRC)/learning/image.cpp $(SRC)/image.h | $(OBJ)
 	$(CXX) $< -o $@ -c
 
 $(OBJ)/sphere.o: $(SRC)/learning/sphere.cpp $(SRC)/ray.h $(SRC)/camera.h $(SRC)/material.h $(SRC)/thread_pool.h $(SRC)/kd_tree.h | $(OBJ)
+	$(CXX) $< -o $@ -c
+
+$(OBJ)/main.o: $(SRC)/main.cpp $(SRC)/ray.h $(SRC)/camera.h $(SRC)/material.h $(SRC)/thread_pool.h $(SRC)/kd_tree.h | $(OBJ)
 	$(CXX) $< -o $@ -c
 
 $(BIN):

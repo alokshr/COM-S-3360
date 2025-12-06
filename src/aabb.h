@@ -26,7 +26,9 @@ class aabb {
          * @param y interval of the box's y length
          * @param z interval of the box's z length
          */
-        aabb(const interval& x, const interval& y, const interval& z) : x(x), y(y), z(z) {}
+        aabb(const interval& x, const interval& y, const interval& z) : x(x), y(y), z(z) {
+            pad_to_minimums();
+        }
 
         /**
          * Creates a bounding box from two extremes
@@ -91,6 +93,30 @@ class aabb {
             }
             return true;
         }  
+
+        /**
+         * Returns the index of the longest axis of the bounding box
+         */
+        int longest_axis() const {
+            if (x.size() > y.size())
+                return x.size() > z.size() ? 0 : 2;
+            else
+                return y.size() > z.size() ? 1 : 2;
+        }
+
+        static const aabb empty, universe;
+        
+    private:
+
+        void pad_to_minimums() {
+            const double delta = 0.0001;
+            if (x.size() < delta) x = x.expand(delta);
+            if (y.size() < delta) y = y.expand(delta);
+            if (z.size() < delta) z = z.expand(delta);
+        }
 };
+
+const aabb aabb::empty = aabb(interval::empty, interval::empty, interval::empty);
+const aabb aabb::universe = aabb(interval::universe, interval::universe, interval::universe);
 
 #endif

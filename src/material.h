@@ -2,6 +2,7 @@
 #define MATERIAL_H
 
 #include "collidable.h"
+#include "texture.h"
 
 class material {
     public:
@@ -16,7 +17,8 @@ class material {
 
 class lambertian : public material {
     public:
-        lambertian(const color& albedo): albedo(albedo) {}
+        lambertian(const color& albedo): tex(make_shared<solid_color>(albedo)) {}
+        lambertian(shared_ptr<texture> tex): tex(tex) {}
 
         bool scatter(const ray& r_in, const collision_hit& rec, color& attenuation, ray& scattered)
         const override {
@@ -27,12 +29,12 @@ class lambertian : public material {
             }
 
             scattered = ray(rec.point, scatter_dir);
-            attenuation = albedo;
+            attenuation = tex->value(rec.u, rec.v, rec.point);
             return true;
         }
 
     private:
-        color albedo;
+        shared_ptr<texture> tex;
 };
 
 class metal : public material {
