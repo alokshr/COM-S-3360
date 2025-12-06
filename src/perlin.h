@@ -9,7 +9,7 @@ class perlin {
         perlin() {
             // Initialize random vectors
             for (int i = 0; i < point_count; i++) {
-                randfloat[i] = random();
+                randvec[i] = randvec3(-1, 1).normalize();
             }
 
             // Permute random vectors for each axis
@@ -19,16 +19,31 @@ class perlin {
         }
 
         double noise(const vec3& p) const {
-            auto i = int(4*p.x()) & 255;
-            auto j = int(4*p.y()) & 255;
-            auto k = int(4*p.z()) & 255;
+            double u = p.x() - std::floor(p.x());
+            double v = p.y() - std::floor(p.y());
+            double w = p.z() - std::floor(p.z());
+            
+            int i = int(std::floor(p.x()));
+            int j = int(std::floor(p.y()));
+            int k = int(std::floor(p.z()));
 
-            return randfloat[perm_x[i] ^ perm_y[j] ^ perm_z[k]];
+            vec3 c[2][2][2];
+
+            for (int di=0; di < 2; di++)
+                for (int dj=0; dj < 2; dj++)
+                    for (int dk=0; dk < 2; dk++)
+                        c[di][dj][dk] = randvec[
+                            perm_x[(i+di) & 255] ^
+                            perm_y[(j+dj) & 255] ^
+                            perm_z[(k+dk) & 255]
+                        ];
+
+            return perlin_interp(c, u, v, w);
         }
 
     private:
         static const int point_count = 256;
-        double randfloat[point_count];
+        vec3 randvec[point_count];
         int perm_x[point_count];
         int perm_y[point_count];
         int perm_z[point_count];
@@ -47,7 +62,26 @@ class perlin {
                 p[i] = p[target];
                 p[target] = tmp;
             }
-    }
+        }
+
+        static double perlin_interp(const vec3 c[2][2][2], double u, double v, double w) {
+            auto uu = u*u*(3-2*u);
+            auto vv = v*v*(3-2*v);
+            auto ww = w*w*(3-2*w);
+            auto accum = 0.0;
+
+            for (int i=0; i < 2; i++)
+                for (int j=0; j < 2; j++)
+                    for (int k=0; k < 2; k++) {
+                        vec3 weight_v(u-i, v-j, w-k);
+                        accum += (i*uu + (1-i)*(1-uu))
+                            * (j*vv + (1-j)*(1-vv))
+                            * (k*ww + (1-k)*(1-ww))
+                            * vec3::dot(c[i][j][k], weight_v);
+                    }
+
+            return accum;
+        }
 };
 
 #endif

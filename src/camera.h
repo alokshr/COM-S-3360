@@ -13,15 +13,16 @@
  * A struct for configuring common camera settings
  */
 struct camera_config {
-    int image_width;
-    int image_height;
-    double vfov;
+    int image_width = 480;
+    int image_height = 480;
+    double vfov = 90;
     vec3 lookfrom, lookat, up;
-    int samples_per_pixel;
-    int max_depth;
-    double defocus_angle;
-    double focus_dist;
-    double gamma;
+    int samples_per_pixel = 0;
+    int max_depth = 3;
+    double defocus_angle = 0;
+    double focus_dist = 10;
+    double gamma = 1;
+    color background = color(0.7, 0.8, 1.0);
 };
 
 /**
@@ -32,18 +33,19 @@ class camera {
         /**
          * Constructs a default camera
          */
-        camera():    
-            lookfrom(vec3()),
-            lookat(vec3(0, 0, 1)),
-            up(vec3(0,1,0)),
-            image_width(480),
-            image_height(480),
-            vfov(90),
-            samples_per_pixel(0),
-            max_depth(3),
-            defocus_angle(0),
-            focus_dist(10),
-            gamma(1) {
+        camera(): 
+            lookfrom(camera_config().lookfrom),
+            lookat(camera_config().lookat),
+            up(camera_config().up),
+            image_width(camera_config().image_width),
+            image_height(camera_config().image_height),
+            vfov(camera_config().vfov),
+            samples_per_pixel(camera_config().samples_per_pixel),
+            max_depth(camera_config().max_depth),
+            defocus_angle(camera_config().defocus_angle),
+            focus_dist(camera_config().focus_dist),
+            gamma(camera_config().gamma),
+            background(camera_config().background) {
                 init();
         };
 
@@ -64,7 +66,8 @@ class camera {
             max_depth(config.max_depth),
             defocus_angle(config.defocus_angle),
             focus_dist(config.focus_dist),
-            gamma(config.gamma) {
+            gamma(config.gamma),
+            background(config.background) {
                 init();
         }
 
@@ -76,11 +79,12 @@ class camera {
          *                    values less than 1 default to a singly-threaded render
          */
         void render(const collidable& world, const char* filename, int num_threads = 1) {
-            std::clog << "Rendering " << filename << " using " << ((num_threads > 1) ? num_threads : 1) << " threads:" << std::endl;
+            bool multithreaded = num_threads > 1;
+            std::clog << "Rendering " << filename << " using " << (multithreaded ? num_threads : 1) << " thread" << (multithreaded ? "s:" : ":") << std::endl;
             const bool anti_alias = samples_per_pixel > 0;
             print_progress(0);
 
-            if (num_threads > 1) {
+            if (multithreaded) {
                 // Distribute each pixel's render as a job for threads
                 thread_pool pool = thread_pool(num_threads);
 
@@ -142,9 +146,8 @@ class camera {
 
     private:
         /**
-         * The center of the camera in 3D space
+         * The center or origin of the camera in 3D space
          */
-        vec3 center;
         vec3 lookfrom;
 
         /**
@@ -205,14 +208,9 @@ class camera {
         double vfov;
 
         /**
-         * The width of the camera's viewport
+         * The background color that appears rays don't hit any objects 
          */
-        double viewport_width;
-
-        /**
-         * The height of the camera's viewport
-         */
-        double viewport_height;
+        color background;
 
         /**
          * The location of the viewport's (0,0) pixel
@@ -235,7 +233,7 @@ class camera {
         image img;
 
         void init() {
-            center = lookfrom;
+            lookfrom;
 
             // Determine viewport dimensions.
             double theta = d2r(vfov);
@@ -257,7 +255,7 @@ class camera {
 
             // Calculate the location of the upper left pixel.
             vec3 viewport_upper_left =
-                center - focus_dist*k - viewport_u/2 - viewport_v/2;
+                lookfrom - focus_dist*k - viewport_u/2 - viewport_v/2;
             pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
             double defocus_radius = focus_dist * tan(d2r(defocus_angle/2.0));
@@ -272,7 +270,7 @@ class camera {
                 + ((x + offset[0])*pixel_delta_u)
                 + ((y + offset[1])*pixel_delta_v);
 
-            vec3 ray_origin = (defocus_angle > 0) ? defocus_disk_sample() : center;
+            vec3 ray_origin = (defocus_angle > 0) ? defocus_disk_sample() : lookfrom;
 
             return ray(ray_origin, pixel_sample-ray_origin);
         }
@@ -296,7 +294,7 @@ class camera {
 
         vec3 defocus_disk_sample() const {
             vec3 p = rand_in_unit_circle();
-            return center + p[0]*defocus_disk_u + p[1]*defocus_disk_v;
+            return lookfrom + p[0]*defocus_disk_u + p[1]*defocus_disk_v;
         }
 
         /**
@@ -330,20 +328,26 @@ class camera {
 
             collision_hit rec;
 
-            if (world.hit(r, interval(EPSILON, infinity), rec)) {
-                ray scattered;
-                color attenuation;
-
-                if (rec.mat->scatter(r, rec, attenuation, scattered)) {
-                    return attenuation * ray_color(scattered, world, depth-1);
-                }
-                
-                return color(0, 0, 0);
+            if (!world.hit(r, interval(EPSILON, infinity), rec)) {
+                return background;
             }
 
-            vec3 unit_direction = r.direction().normalize();
-            auto a = 0.5*(unit_direction.y() + 1.0);
-            return lerp(color(1.0, 1.0, 1.0), color(0.5, 0.7, 1.0), a);
+            ray scattered;
+            color attenuation;
+
+            color emission = rec.mat->emit(rec.u, rec.v, rec.point);
+
+            if (!rec.mat->scatter(r, rec, attenuation, scattered)) {
+                return emission;
+            }
+            
+            color scatter = attenuation * ray_color(scattered, world, depth-1);
+
+            return emission + scatter;
+
+            // vec3 unit_direction = r.direction().normalize();
+            // auto a = 0.5*(unit_direction.y() + 1.0);
+            // return lerp(color(1.0, 1.0, 1.0), color(0.5, 0.7, 1.0), a);
         }
 
         void print_progress(int progress) {

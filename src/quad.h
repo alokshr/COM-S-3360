@@ -79,4 +79,26 @@ class quad : public collidable{
         double d;
 };
 
+inline shared_ptr<collidable_list> box(const vec3& a, const vec3& b, shared_ptr<material> mat)
+{
+    auto sides = make_shared<collidable_list>();
+
+    // Construct the two opposite vertices with the minimum and maximum coordinates.
+    vec3 min = vec3(std::fmin(a.x(),b.x()), std::fmin(a.y(),b.y()), std::fmin(a.z(),b.z()));
+    vec3 max = vec3(std::fmax(a.x(),b.x()), std::fmax(a.y(),b.y()), std::fmax(a.z(),b.z()));
+
+    vec3 x = vec3(max.x() - min.x(), 0, 0);
+    vec3 y = vec3(0, max.y() - min.y(), 0);
+    vec3 z = vec3(0, 0, max.z() - min.z());
+
+    sides->add(make_shared<quad>(vec3(min.x(), min.y(), max.z()),  x,  y, mat)); // front
+    sides->add(make_shared<quad>(vec3(max.x(), min.y(), max.z()), -z,  y, mat)); // right
+    sides->add(make_shared<quad>(vec3(max.x(), min.y(), min.z()), -x,  y, mat)); // back
+    sides->add(make_shared<quad>(vec3(min.x(), min.y(), min.z()),  z,  y, mat)); // left
+    sides->add(make_shared<quad>(vec3(min.x(), max.y(), max.z()),  x, -z, mat)); // top
+    sides->add(make_shared<quad>(vec3(min.x(), min.y(), min.z()),  x,  z, mat)); // bottom
+
+    return sides;
+}
+
 #endif
