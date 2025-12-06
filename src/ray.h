@@ -42,7 +42,14 @@ class ray {
         }
 
     private:
+        /**
+         * The origin of this ray
+         */
         vec3 orig;
+
+        /**
+         * The direction of this ray
+         */
         vec3 dir;
 };
 #endif

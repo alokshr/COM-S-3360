@@ -5,8 +5,18 @@
 
 using std::shared_ptr;
 
+/**
+ * A class for rendering quads
+ */
 class quad : public collidable{
     public:
+        /**
+         * Creates a quad with an given origin, basis vectors, and material
+         * @param q origin of quad
+         * @param u basis vector of quad
+         * @param v basis vector of quad
+         * @param mat material of quad
+         */
         quad(const vec3& q, const vec3& u, const vec3& v, shared_ptr<material> mat) :
             q(q), u(u), v(v), mat(mat) {
             
@@ -15,10 +25,7 @@ class quad : public collidable{
             d = vec3::dot(normal, q);
             w = n / n.sqmag();
 
-            set_bounding_box();
-        }
-
-        virtual void set_bounding_box() {
+            // Set bounding box based on diagonals
             aabb diag1 = aabb(q, q + u + v);
             aabb diag2 = aabb(q + u, q + v);
             bbox = aabb(diag1, diag2);
@@ -34,7 +41,7 @@ class quad : public collidable{
             double t = (d - vec3::dot(normal, r.origin()))/den;
             if (!ray_t.contains(t)) return false;
 
-            // Use planar coordinates to find if the hit point lies inside the quad
+            // Use quad coordinates to find if the hit point lies inside the quad
             vec3 intersection = r.at(t);
             vec3 hit_vec = intersection - q;
             double alpha = vec3::dot(w, vec3::cross(hit_vec, v));
@@ -43,6 +50,7 @@ class quad : public collidable{
             if (!is_interior(alpha, beta, rec))
                 return false;
 
+            // Hit point is inside quad, update collision info
             rec.t = t;
             rec.point = intersection;
             rec.mat = mat;
@@ -52,15 +60,16 @@ class quad : public collidable{
         }
 
         /**
-         * Returns whether planar coordinates (a, b) are inside of this quad and updates uv coords
-         * @param a planar coord of u basis vector
-         * @param b planar coord of v basis vector
-         * @param rec hit info to update if the hit is inside this quad
-         * @return true if hit, false if not; updates rec if hit
+         * Returns whether quad coordinates (a, b) are inside of this quad and updates uv coords
+         * @param a coord of u basis vector
+         * @param b coord of v basis vector
+         * @param rec collision info to update if the hit is inside this quad
+         * @return true if hit, false if not; updates collision info if hit
          */
         virtual bool is_interior(double a, double b, collision_hit& rec) const {
             const interval unit_interval = interval(0, 1);
             
+            // If our quad coords aren't between 0 and 1, they aren't inside the quad
             if (!unit_interval.contains(a) || !unit_interval.contains(b)) return false;
 
             rec.u = a;
@@ -70,12 +79,39 @@ class quad : public collidable{
 
         aabb bounding_box() const override { return bbox; }
     private:
+        /**
+         * The origin point of this quad
+         */
         vec3 q;
+
+        /**
+         * The basis vectors of this quad
+         */
         vec3 u, v;
+        
+        /**
+         * Constant for calculating quad coordinates
+         */
         vec3 w;
+        
+        /**
+         * The material of this quad
+         */
         shared_ptr<material> mat;
+
+        /**
+         * The bounding box of this quad
+         */
         aabb bbox;
+
+        /**
+         * The normal vector of this quad
+         */
         vec3 normal;
+
+        /**
+         * Constant for calculating the t value of a ray collision
+         */
         double d;
 };
 

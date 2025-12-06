@@ -4,8 +4,14 @@
 #include "vec3.h"
 #include "mathutils.h"
 
+/**
+ * A generator for perlin noise
+ */
 class perlin {
     public:
+        /**
+         * Creates a perlin noise generator
+         */
         perlin() {
             // Initialize random vectors
             for (int i = 0; i < point_count; i++) {
@@ -18,6 +24,11 @@ class perlin {
             perlin_generate_perm(perm_z);
         }
 
+        /**
+         * Returns the noise sample at a given point
+         * @param p point to sample
+         * @return noise at given point
+         */
         double noise(const vec3& p) const {
             double u = p.x() - std::floor(p.x());
             double v = p.y() - std::floor(p.y());

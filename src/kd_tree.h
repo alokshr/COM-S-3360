@@ -12,8 +12,18 @@
  */
 class kd_tree : public collidable {
     public:
+        /**
+         * Creates a kd_tree from a given collidable_list
+         * @param list collidable_list to turn into a kd_tree
+         */
         kd_tree(collidable_list list) : kd_tree(list.objects, 0, list.objects.size()) {}
 
+        /**
+         * Recursively creates a kd_tree from a given collidable_list and range
+         * @param objects vector of collidable pointers
+         * @param start lower bound of vector to use
+         * @param end upper bound of vector to use
+         */
         kd_tree(std::vector<shared_ptr<collidable>>& objects, size_t start, size_t end) {
             bbox = aabb::empty;
 
@@ -57,24 +67,62 @@ class kd_tree : public collidable {
         aabb bounding_box() const override { return bbox; }
 
     private:
+        /**
+         * The left node of this tree
+         */
         shared_ptr<collidable> left;
+
+        /**
+         * The right node of this tree
+         */
         shared_ptr<collidable> right;
+
+        /**
+         * The bounding box surrounding all collidables in this tree
+         */
         aabb bbox;
 
+        /**
+         * Compares the length of two collidables' bounding boxes along either the x, y, or z axis
+         * @param a pointer to collidable to compare
+         * @param b pointer to collidable to compare
+         * @param axis_index 0 for x,
+         *                   1 for y,
+         *                   2 for z
+         * @return true if a's length in the given axis is smaller, false otherwise
+         */
         static bool aabb_comp(const shared_ptr<collidable> a, const shared_ptr<collidable> b, int axis_index) {
             interval a_axis_interval = a->bounding_box().axis_interval(axis_index);
             interval b_axis_interval = b->bounding_box().axis_interval(axis_index);
             return a_axis_interval.min < b_axis_interval.min;
         }
 
+        /**
+         * Compares the x lengths of two collidables' bounding boxes
+         * @param a pointer to collidable to compare
+         * @param b pointer to collidable to compare
+         * @return true if a's length in the x axis is smaller, false otherwise
+         */
         static bool aabb_comp_x (const shared_ptr<collidable> a, const shared_ptr<collidable> b) {
             return aabb_comp(a, b, 0);
         }
 
+        /**
+         * Compares the y lengths of two collidables' bounding boxes
+         * @param a pointer to collidable to compare
+         * @param b pointer to collidable to compare
+         * @return true if a's length in the y axis is smaller, false otherwise
+         */
         static bool aabb_comp_y (const shared_ptr<collidable> a, const shared_ptr<collidable> b) {
             return aabb_comp(a, b, 1);
         }
 
+        /**
+         * Compares the z lengths of two collidables' bounding boxes
+         * @param a pointer to collidable to compare
+         * @param b pointer to collidable to compare
+         * @return true if a's length in the z axis is smaller, false otherwise
+         */
         static bool aabb_comp_z (const shared_ptr<collidable> a, const shared_ptr<collidable> b) {
             return aabb_comp(a, b, 2);
         }

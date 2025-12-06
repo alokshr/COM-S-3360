@@ -24,13 +24,13 @@ int main(int argc, char const *argv[])
     camera_config config_mattest = {
         1080,           //  int image_width;
         720,            //  int image_height;
-        90,             //  double vfov;
+        30,             //  double vfov;
         vec3(-2, 2, 1), //  vec3 lookfrom;
         vec3(0, 0, -1), //  vec3 lookat;
         vec3(0, 1, 0),  //  vec3 up;
-        10,             //  int samples_per_pixel;
+        100,             //  int samples_per_pixel;
         50,             //  int max_depth;
-        10,             //  double defocus_angle;
+        0,             //  double defocus_angle;
         3.4,            //  double defocus_dist;
         2               //  double gamma;
     };
@@ -55,9 +55,9 @@ int main(int argc, char const *argv[])
         vec3(13, 2, 3), //  vec3 lookfrom;
         vec3(0, 0, 0),  //  vec3 lookat;
         vec3(0, 1, 0),  //  vec3 up;
-        10,              //  int samples_per_pixel;
+        100,              //  int samples_per_pixel;
         50,             //  int max_depth;
-        0.6,            //  double defocus_angle;
+        0,            //  double defocus_angle;
         10,             //  double defocus_dist;
         2               //  double gamma;
     };
@@ -113,6 +113,6 @@ int main(int argc, char const *argv[])
     camera cam_mattest(config_mattest);
     camera cam_orbfield(config_orbfield);
 
-    cam_mattest.render(world_mattest, "mattest.ppm", std::thread::hardware_concurrency() - 1);
-    cam_orbfield.render(world_orbfield, "orbfield.ppm", std::thread::hardware_concurrency() - 1);
+    cam_mattest.render(world_mattest, "mattest.ppm", std::thread::hardware_concurrency());
+    cam_orbfield.render(world_orbfield, "orbfield.ppm", std::thread::hardware_concurrency());
 }

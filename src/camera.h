@@ -73,7 +73,7 @@ class camera {
 
         /**
          * Renders a collidable object and outputs the rendered image to given filename
-         * @param world collidable or collidable_list to render
+         * @param world collidable to render
          * @param filename name of file to save rendered image to
          * @param num_threads the number of threads to run to render the image,
          *                    values less than 1 default to a singly-threaded render
@@ -95,11 +95,11 @@ class camera {
                         });
                     }
                 }
-
+                
+                // Show progress
                 int progress = 0;
                 while (pool.get_progress_percent() < 1) {
                     int current_progress = pool.get_progress_percent()*100;
-                    // std::clog << current_progress << std::endl;
 
                     if (current_progress != progress) {
                         progress = current_progress;
@@ -113,6 +113,7 @@ class camera {
                     for (int x = 0; x < image_width; x++) {
                         render_pixel(x, y, world, anti_alias);
 
+                        // Show progress
                         int current_progress = 100*(y * image_width + x)/(image_width*image_height);
 
                         if (current_progress != progress) {
@@ -128,7 +129,13 @@ class camera {
             output_ppm_image(img, filename);
         }
 
-
+        /**
+         * Renders a single pixel on this camera's image
+         * @param x image x coord
+         * @param y image y coord
+         * @param world collidable to render
+         * @param anti_alias if true, use multiple randomly sampled rays, if false, use only one ray
+         */
         void render_pixel(int x, int y, const collidable& world, bool anti_alias) {
             color pixel_color = color();
             if (anti_alias) {

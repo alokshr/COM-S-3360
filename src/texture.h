@@ -9,23 +9,42 @@
 using std::make_shared;
 using std::shared_ptr;
 
+/**
+ * A virtual class to represent textures
+ */
 class texture {
     public:
         virtual ~texture() = default;
 
+        /**
+         * Returns the color of this texture at the given uv-coords and point in 3D space
+         * @param u u coord of texture to sample
+         * @param v v coord of texture to sample
+         * @param p point in 3D space
+         * @return color of texture
+         */
         virtual color value(double u, double v, const vec3& p) const = 0;
 };
 
+/**
+ * A class for creating solid color textures
+ */
 class solid_color : public texture {
     public:
+        /**
+         * Creates a solid color texture
+         * @param albedo solid color of texture
+         */
         solid_color(const color& albedo) : albedo(albedo) {}
-        solid_color(double r, double g, double b) : albedo(color(r, g, b)) {}
 
         color value(double u, double v, const vec3& p) const override {
             return albedo;
         }
 
     private:
+        /**
+         * The color of this texture;
+         */
         color albedo;
 };
 
@@ -42,11 +61,26 @@ class solid_color : public texture {
 //         color end;
 // };
 
+/**
+ * A class for creating checkboard pattern textures
+ */
 class checker_texture : public texture {
     public:
+        /**
+         * Creates a checkboard texture with a given square scale and textures
+         * @param scale scale of checkboard squares
+         * @param even texture of one set of checkboard squares
+         * @param odd texture of other set of checkboard squares
+         */
         checker_texture(double scale, shared_ptr<texture> even, shared_ptr<texture> odd)
             : inv_scale(1.0 / scale), even(even), odd(odd) {}
 
+        /**
+         * Creates a checkboard texture with a given square scale and solid colors
+         * @param scale scale of checkboard squares
+         * @param even color of one set of checkboard squares
+         * @param odd color of other set of checkboard squares
+         */
         checker_texture(double scale, const color& c1, const color& c2)
             : checker_texture(scale, make_shared<solid_color>(c1), make_shared<solid_color>(c2)) {}
 
@@ -61,13 +95,31 @@ class checker_texture : public texture {
         }
 
     private:
+        /**
+         * The scaling factor of the checkboard squares
+         */
         double inv_scale;
+
+        /**
+         * The texture for the even squares of the checkboard
+         */
         shared_ptr<texture> even;
+
+        /**
+         * The texture for the odd squares of the checkboard
+         */
         shared_ptr<texture> odd;
 };
 
+/**
+ * A class for creating Perlin noise textures
+ */
 class noise_texture : public texture {
     public:
+        /**
+         * Creates a Perlin noise texture with a given scale
+         * @param scale scale of noise
+         */
         noise_texture(double scale) : scale(scale) {}
     
         color value(double u, double v, const vec3& p) const override {
@@ -75,7 +127,14 @@ class noise_texture : public texture {
         }
 
     private:
+        /**
+         * The generator of this texture's Perlin noise
+         */
         perlin generator;
+
+        /**
+         * The scaling factor of the Perlin noise
+         */
         double scale;
 };
 

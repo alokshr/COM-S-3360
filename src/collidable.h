@@ -10,15 +10,16 @@ class material;
  * A struct used to collect and hold information about collisions
  */
 struct collision_hit {
-    vec3 point;
-    vec3 normal;
-    std::shared_ptr<material> mat;
-    double t;
-    double u, v;
-    bool front_face;
+    vec3 point;                     // collision point
+    vec3 normal;                    // normal of collision
+    std::shared_ptr<material> mat;  // material from collision
+    double t;                       // t value of ray that collided
+    double u, v;                    // u-v values of the collision's texture
+    bool front_face;                // used to determine if collision happened "inside" or "outside"
 
-    /** Sets the hit record normal vector.
-     * NOTE: the parameter `outward_normal` is assumed to have unit length.
+    /** Sets the hit record normal vector
+     * @param r incoming ray
+     * @param outward_normal unit vector normal of the collision
      */
     void set_face_normal(const ray& r, const vec3& outward_normal) {
         front_face = vec3::dot(r.direction(), outward_normal) < 0;

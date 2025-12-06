@@ -4,8 +4,17 @@
 #include "renderlib.h"
 #include "collidable.h"
 
+/**
+ * A class for rendering sphere primitives
+ */
 class sphere : public collidable {
     public:
+        /**
+         * Creates a sphere with a given center, radius, and material
+         * @param center center of sphere
+         * @param radius radius of sphere
+         * @param mat material of sphere
+         */
         sphere(
             const vec3& center,
             double radius,
@@ -19,6 +28,7 @@ class sphere : public collidable {
         }
 
         bool hit(const ray& r, interval ray_t, collision_hit& rec) const {
+            // Solve quadratic equation for t
             vec3 oc = center - r.origin();
             double a = r.direction().sqmag();
             double h = vec3::dot(r.direction(), oc);
@@ -27,17 +37,17 @@ class sphere : public collidable {
 
             double sqrtd = std::sqrt(discriminant);
 
-            // Find the nearest root that lies in the acceptable range.
-            double root = (h - sqrtd) / a;
+            // Find if the calculated roots are in range of this ray
+            double t = (h - sqrtd) / a;
 
-            if (!ray_t.surrounds(root)) {
-                root = (h + sqrtd) / a;
+            if (!ray_t.surrounds(t)) {
+                t = (h + sqrtd) / a;
 
-                if (!ray_t.surrounds(root))
-                    return false;
+                if (!ray_t.surrounds(t)) return false;
             }
             
-            rec.t = root;
+            // Root is in range, so we update collision info
+            rec.t = t;
             rec.point = r.at(rec.t);
             vec3 outward_normal = (rec.point - center) / radius;
             rec.set_face_normal(r, outward_normal);
@@ -50,12 +60,36 @@ class sphere : public collidable {
         aabb bounding_box() const override { return bbox; }
 
     private:
+        /**
+         * The center of this sphere
+         */
         vec3 center;
+
+        /**
+         * The radius of this sphere
+         */
         double radius;
+
+        /**
+         * The material of this sphere
+         */
         std::shared_ptr<material> mat;
+
+        /**
+         * The bounding box of this sphere
+         */
         aabb bbox;
 
-         static void get_sphere_uv(const vec3& p, double& u, double& v) {
+        /**
+         * Updates uv-coords to be coords of a point on a unit sphere where  
+         * 
+         * u: returned value [0,1] of angle around the Y axis from X=-1.
+         * v: returned value [0,1] of angle from Y=-1 to Y=+1.
+         * @param p point on unit sphere
+         * @param u u value to update
+         * @param v v value to update
+         */
+        static void get_sphere_uv(const vec3& p, double& u, double& v) {
             // p: a given point on the sphere of radius one, centered at the origin.
             // u: returned value [0,1] of angle around the Y axis from X=-1.
             // v: returned value [0,1] of angle from Y=-1 to Y=+1.

@@ -127,16 +127,14 @@ void simple_light() {
 }
 
 
-void box() {
+void cornell_box() {
     collidable_list world;
 
     // Materials
-    auto left_red     = make_shared<lambertian>(color(1.0, 0.2, 0.2));
-    auto back_green   = make_shared<lambertian>(color(0.2, 1.0, 0.2));
-    auto right_blue   = make_shared<lambertian>(color(0.2, 0.2, 1.0));
-    auto upper_orange = make_shared<lambertian>(color(1.0, 0.5, 0.0));
-    auto lower_teal   = make_shared<lambertian>(color(0.2, 0.8, 0.8));
-    auto light = make_shared<diffuse_light>(color(15,15,15));
+    auto red   = make_shared<lambertian>(color(.65, .05, .05));
+    auto white = make_shared<lambertian>(color(.73, .73, .73));
+    auto green = make_shared<lambertian>(color(.12, .45, .15));
+    auto light = make_shared<diffuse_light>(color(15, 15, 15));
 
     double box_width = 500;   // x
     double box_height = 500;  // y
@@ -148,15 +146,17 @@ void box() {
     vec3 topright_back_corner = -bottomleft_front_corner;
     vec3 light_origin = topright_back_corner + vec3((box_width-light_width)/2, 0, -(box_depth-light_depth)/2);
 
-    auto floor = make_shared<quad>(bottomleft_front_corner, vec3(0, 0, box_depth), vec3(-box_width, 0, 0), lower_teal);
-    auto ceiling = make_shared<quad>(topright_back_corner, vec3(0, 0, -box_depth), vec3(box_width, 0, 0), upper_orange);
+    auto floor = make_shared<quad>(bottomleft_front_corner, vec3(0, 0, box_depth), vec3(-box_width, 0, 0), white);
+    auto ceiling = make_shared<quad>(topright_back_corner, vec3(0, 0, -box_depth), vec3(box_width, 0, 0), white);
     auto ceiling_light = make_shared<quad>(light_origin, vec3(0, 0, -light_depth), vec3(light_width, 0, 0), light);
 
-    auto back_wall = make_shared<quad>(topright_back_corner, vec3(0, -box_height, 0), vec3(box_width, 0, 0), back_green);
+    auto back_wall = make_shared<quad>(topright_back_corner, vec3(0, -box_height, 0), vec3(box_width, 0, 0), white);
     
-    auto left_wall = make_shared<quad>(bottomleft_front_corner, vec3(0, box_height, 0), vec3(0, 0, box_depth), left_red);
-    auto right_wall = make_shared<quad>(topright_back_corner, vec3(0, -box_height, 0), vec3(0, 0, -box_depth), right_blue);
+    auto left_wall = make_shared<quad>(bottomleft_front_corner, vec3(0, box_height, 0), vec3(0, 0, box_depth), green);
+    auto right_wall = make_shared<quad>(topright_back_corner, vec3(0, -box_height, 0), vec3(0, 0, -box_depth), red);
     
+    auto b1 = box(vec3(box_width/4, -box_height/2, box_depth/3), vec3(box_width/4, box_height/10, box_depth), white);
+    // auto b2 = box(vec3());
 
     world.add(floor);
     world.add(ceiling);
@@ -164,6 +164,8 @@ void box() {
     world.add(back_wall);
     world.add(left_wall);
     world.add(right_wall);
+
+    world.add(b1);
 
     // shared_ptr<sphere> centerpiece = make_shared<sphere>(vec3(0, 0, 4), 1, left_red);
     // world.add(centerpiece);
@@ -182,7 +184,7 @@ void box() {
         vec3(0, 0, -box_depth),  //  vec3 lookfrom;
         vec3(0, 0, 0),  //  vec3 lookat;
         vec3(0, 1, 0),  //  vec3 up;
-        200,            //  int samples_per_pixel;
+        100,            //  int samples_per_pixel;
         50,             //  int max_depth;
         0,              //  double defocus_angle;
         10,             //  double defocus_dist;
@@ -191,7 +193,7 @@ void box() {
 
     camera cam(config);
 
-    cam.render(world, "box.ppm", std::thread::hardware_concurrency());
+    cam.render(world, "cornell_box.ppm", std::thread::hardware_concurrency());
 }
 
 int main() {
@@ -202,6 +204,6 @@ int main() {
         case 4: perlin_spheres();   break;
         case 5: quads();            break;
         case 6: simple_light();     break;
-        case 7: box();              break;
+        case 7: cornell_box();      break;
     }
 }
