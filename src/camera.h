@@ -272,6 +272,13 @@ class camera {
             img = image(image_height, std::vector<color>(image_width, color()));
         }
 
+        /**
+         * Returns a ray originated at the camera or defocus disk, pointing through the given pixel
+         * @param x x coord of pixel
+         * @param y y coord of pixel
+         * @param offset offset from pixel coord  
+         * @return ray from camera/defocus disk pointing through the pixel
+         */
         ray get_ray(int x, int y, vec3 offset) const {
             vec3 pixel_sample = pixel00_loc
                 + ((x + offset[0])*pixel_delta_u)
@@ -279,7 +286,7 @@ class camera {
 
             vec3 ray_origin = (defocus_angle > 0) ? defocus_disk_sample() : lookfrom;
 
-            return ray(ray_origin, pixel_sample-ray_origin);
+            return ray(ray_origin, pixel_sample-ray_origin, random());
         }
 
         vec3 sample_square() const {
@@ -299,6 +306,10 @@ class camera {
             return random()*vec3(cos(theta), sin(theta), 0);
         }
 
+        /**
+         * Returns a point sampled from this camera's defocus disk
+         * @return point on defocus disk
+         */
         vec3 defocus_disk_sample() const {
             vec3 p = rand_in_unit_circle();
             return lookfrom + p[0]*defocus_disk_u + p[1]*defocus_disk_v;

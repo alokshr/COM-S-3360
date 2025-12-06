@@ -20,16 +20,40 @@ class sphere : public collidable {
             double radius,
             shared_ptr<material> mat
         ):
-            center(center),
+            center(ray(center, vec3())),
             radius(std::fmax(0,radius)),
             mat(mat) {
             vec3 rad = vec3(radius, radius, radius);
             bbox = aabb(center-rad, center+rad);
         }
 
+        /**
+         * Creates a moving sphere with a radius and material given two centers to move between
+         * @param center1 starting center of sphere
+         * @param center2 ending center of sphere
+         * @param radius radius of sphere
+         * @param mat material of sphere
+         */
+        sphere(
+            const vec3& center1,
+            const vec3& center2,
+            double radius,
+            shared_ptr<material> mat
+        ):
+            center(ray(center1, center2-center1)),
+            radius(std::fmax(0,radius)),
+            mat(mat) {
+                
+            vec3 rad = vec3(radius, radius, radius);
+            aabb bbox1 = aabb(center1-rad, center1+rad);
+            aabb bbox2 = aabb(center2-rad, center2+rad);
+            bbox = aabb(bbox1, bbox2);
+        }
+
         bool hit(const ray& r, interval ray_t, collision_hit& rec) const {
             // Solve quadratic equation for t
-            vec3 oc = center - r.origin();
+            vec3 current_center = center.at(r.time());
+            vec3 oc = current_center - r.origin();
             double a = r.direction().sqmag();
             double h = vec3::dot(r.direction(), oc);
             double c = oc.sqmag() - radius*radius;
@@ -49,7 +73,7 @@ class sphere : public collidable {
             // Root is in range, so we update collision info
             rec.t = t;
             rec.point = r.at(rec.t);
-            vec3 outward_normal = (rec.point - center) / radius;
+            vec3 outward_normal = (rec.point - current_center) / radius;
             rec.set_face_normal(r, outward_normal);
             get_sphere_uv(outward_normal, rec.u, rec.v);
             rec.mat = mat;
@@ -63,7 +87,7 @@ class sphere : public collidable {
         /**
          * The center of this sphere
          */
-        vec3 center;
+        ray center;
 
         /**
          * The radius of this sphere

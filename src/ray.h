@@ -14,11 +14,19 @@ class ray {
         ray() {};
 
         /**
+         * Creates a ray from an origin point and a direction, with a given time
+         * @param origin origin point of ray
+         * @param direction direction of ray
+         * @param time time of ray
+         */
+        ray(const vec3& origin, const vec3& direction, double time): orig(origin), dir(direction), t(time) {};
+
+        /**
          * Creates a ray from an origin point and a direction
          * @param origin origin point of ray
          * @param direction direction of ray 
          */
-        ray(const vec3& origin, const vec3& direction): orig(origin), dir(direction) {};
+        ray(const vec3& origin, const vec3& direction): ray(origin, direction, 0) {};
 
         /**
          * Returns the origin point of this ray
@@ -27,10 +35,16 @@ class ray {
         const vec3& origin() const  { return orig; }
 
         /**
-         * Return the direction of this ray
+         * Returns the direction of this ray
          * @return direction
          */
         const vec3& direction() const { return dir; }
+
+        /**
+         * Returns the time of this ray
+         * @return time
+         */
+        double time() const { return t; }
 
         /**
          * Returns the point along the ray
@@ -51,5 +65,10 @@ class ray {
          * The direction of this ray
          */
         vec3 dir;
+
+        /**
+         * The time that this ray is shot at
+         */
+        double t;
 };
 #endif

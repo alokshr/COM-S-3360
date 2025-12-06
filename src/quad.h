@@ -6,7 +6,7 @@
 using std::shared_ptr;
 
 /**
- * A class for rendering quads
+ * A class for rendering quads primitives
  */
 class quad : public collidable{
     public:
