@@ -51,7 +51,7 @@ inline double clamp(double value, double min, double max) {
  * Generates a uniformly sampled random number between 0 inclusive and 1 exclusive
  * @return uniformly sampled number
  */
-inline double random() {
+inline double random_double() {
     static std::uniform_real_distribution<double> distribution(0.0, 1.0);
     static std::mt19937 generator;
     return distribution(generator);
@@ -62,8 +62,8 @@ inline double random() {
  * @param min lower bound, inclusive
  * @param max upper bound, exclusive
  */
-inline double random(double min, double max) {
-    return min + (max-min)*random();
+inline double random_double(double min, double max) {
+    return min + (max-min)*random_double();
 }
 
 /**
@@ -82,7 +82,7 @@ inline double random_normal() {
  * @param max upper bound
  */
 inline int random_int(int min, int max) {
-    return int(random(min, max+1));
+    return int(random_double(min, max+1));
 }
 
 #endif

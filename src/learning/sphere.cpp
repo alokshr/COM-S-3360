@@ -72,8 +72,8 @@ int main(int argc, char const *argv[])
 
     for (int a = -11; a < 11; a++) {
         for (int b = -11; b < 11; b++) {
-            auto choose_mat = random();
-            vec3 center(a + 0.9*random(), 0.2, b + 0.9*random());
+            auto choose_mat = random_double();
+            vec3 center(a + 0.9*random_double(), 0.2, b + 0.9*random_double());
 
             if ((center - vec3(4, 0.2, 0)).mag() > 0.9) {
                 shared_ptr<material> sphere_material;
@@ -86,7 +86,7 @@ int main(int argc, char const *argv[])
                 } else if (choose_mat < 0.95) {
                     // metal
                     auto albedo = randvec3(0.5, 1);
-                    auto fuzz = random(0, 0.5);
+                    auto fuzz = random_double(0, 0.5);
                     sphere_material = make_shared<metal>(albedo, fuzz);
                     world_orbfield.add(make_shared<sphere>(center, 0.2, sphere_material));
                 } else {

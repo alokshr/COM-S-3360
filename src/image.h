@@ -13,7 +13,7 @@ using image = std::vector<std::vector<color>>;
  * @param img an image struct
  * @param filename the name to save the .ppm file as
  */
-int output_ppm_image(image img, const char* filename) {
+int output_ppm_image(image img, const std::string& filename) {
     if (img.size() < 1 || img[0].size() < 1) {
         std::cerr << "Cannot print image of zero width or height" << std::endl;
         return -1;

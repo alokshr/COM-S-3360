@@ -78,7 +78,7 @@ class camera {
          * @param num_threads the number of threads to run to render the image,
          *                    values less than 1 default to a singly-threaded render
          */
-        void render(const collidable& world, const char* filename, int num_threads = 1) {
+        void render(const collidable& world, const std::string& filename, int num_threads = 1) {
             bool multithreaded = num_threads > 1;
             std::clog << "Rendering " << filename << " using " << (multithreaded ? num_threads : 1) << " thread" << (multithreaded ? "s:" : ":") << std::endl;
             const bool anti_alias = samples_per_pixel > 0;
@@ -286,13 +286,13 @@ class camera {
 
             vec3 ray_origin = (defocus_angle > 0) ? defocus_disk_sample() : lookfrom;
 
-            return ray(ray_origin, pixel_sample-ray_origin, random());
+            return ray(ray_origin, pixel_sample-ray_origin, random_double());
         }
 
         vec3 sample_square() const {
             return vec3(
-                random() - 0.5,
-                random() - 0.5,
+                random_double() - 0.5,
+                random_double() - 0.5,
                 0
             );
         }
@@ -302,8 +302,8 @@ class camera {
          * @return vec3 with the coords in the x and y components, z is 0  
          */
         vec3 rand_in_unit_circle() const {
-            double theta = sqrt(random())*2*M_PI;
-            return random()*vec3(cos(theta), sin(theta), 0);
+            double theta = sqrt(random_double())*2*M_PI;
+            return random_double()*vec3(cos(theta), sin(theta), 0);
         }
 
         /**

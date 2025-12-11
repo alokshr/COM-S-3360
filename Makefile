@@ -46,7 +46,7 @@ $(OBJ)/image.o: $(SRC)/learning/image.cpp $(SRC)/image.h | $(OBJ)
 $(OBJ)/sphere.o: $(SRC)/learning/sphere.cpp $(SRC)/ray.h $(SRC)/camera.h $(SRC)/material.h $(SRC)/thread_pool.h $(SRC)/kd_tree.h | $(OBJ)
 	$(CXX) $< -o $@ -c
 
-$(OBJ)/main.o: $(SRC)/main.cpp $(SRC)/ray.h $(SRC)/camera.h $(SRC)/material.h $(SRC)/thread_pool.h $(SRC)/kd_tree.h $(SRC)/perlin.h | $(OBJ)
+$(OBJ)/main.o: $(SRC)/main.cpp $(SRC)/ray.h $(SRC)/camera.h $(SRC)/material.h $(SRC)/thread_pool.h $(SRC)/kd_tree.h $(SRC)/perlin.h $(SRC)/obj_parser.h $(SRC)/triangle.h  | $(OBJ)
 	$(CXX) $< -o $@ -c
 
 $(BIN):

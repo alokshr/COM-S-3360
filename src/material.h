@@ -130,7 +130,7 @@ class dielectric : public material {
             bool cannot_refract = ri * sin_theta > 1.0;
             vec3 direction;
 
-            if (cannot_refract || reflectance(cos_theta, ri) > random())
+            if (cannot_refract || reflectance(cos_theta, ri) > random_double())
                 direction = reflect(unit_direction, rec.normal);
             else
                 direction = refract(unit_direction, rec.normal, ri);

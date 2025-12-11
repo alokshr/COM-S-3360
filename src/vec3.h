@@ -311,7 +311,7 @@ inline vec3 operator/(double scalar, const vec3& v) {
  * @return uniformly sampled vector
  */
 inline vec3 randvec3() {
-    return vec3(random(), random(), random());
+    return vec3(random_double(), random_double(), random_double());
 }
 
 /**
@@ -321,7 +321,7 @@ inline vec3 randvec3() {
  * @return uniformly sampled vector
  */
 inline vec3 randvec3(double min, double max) {
-    return vec3(random(min, max), random(min, max), random(min, max));
+    return vec3(random_double(min, max), random_double(min, max), random_double(min, max));
 }
 
 
