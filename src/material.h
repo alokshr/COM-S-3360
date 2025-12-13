@@ -186,4 +186,32 @@ class diffuse_light : public material {
         shared_ptr<texture> tex;
 };
 
+/**
+ * A class for uniformly scattering inside a volume in all directions
+ */
+class isotropic : public material {
+    public:
+        /**
+         * Creates an isotropic material with a solid color used for volume scattering
+         * @param albedo solid color of material
+         */
+        isotropic(const color& albedo) : tex(make_shared<solid_color>(albedo)) {}
+        
+        /**
+         * Creates an isotropic material with a given texture used for volume scattering
+         * @param tex texture of material
+         */
+        isotropic(shared_ptr<texture> tex) : tex(tex) {}
+
+        bool scatter(const ray& r_in, const collision_hit& rec, color& attenuation, ray& scattered)
+        const override {
+            scattered = ray(rec.point, randvec3().normalize(), r_in.time());
+            attenuation = tex->value(rec.u, rec.v, rec.point);
+            return true;
+        }
+
+    private:
+        shared_ptr<texture> tex;
+};
+
 #endif
