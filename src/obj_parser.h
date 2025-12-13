@@ -77,7 +77,7 @@ class obj_parser {
                 } else if (type == "vn") {
                     double x, y, z;
                     stream >> x >> y >> z;
-                    texs.emplace_back(x, y, z);
+                    norms.emplace_back(x, y, z);
                 // Face data
                 } else if (type == "f") {
                     std::vector<std::string> clusters;
@@ -101,7 +101,7 @@ class obj_parser {
     
         shared_ptr<collidable_list> generate_triangles(shared_ptr<material> mat) {
             shared_ptr<collidable_list> objects = make_shared<collidable_list>();
-            
+
             for (const auto& face_group : face_groups) {
                 shared_ptr<collidable_list> object = make_shared<collidable_list>();
                 
@@ -109,25 +109,67 @@ class obj_parser {
                     int v0_idx = face_group.face_verts.at(n).vertex_index;
                     int v1_idx = face_group.face_verts.at(n+1).vertex_index;
                     int v2_idx = face_group.face_verts.at(n+2).vertex_index;
+                    
+                    int tv0_idx = face_group.face_verts.at(n).uv_index;
+                    int tv1_idx = face_group.face_verts.at(n+1).uv_index;
+                    int tv2_idx = face_group.face_verts.at(n+2).uv_index;
 
-                    int vn0_idx = face_group.face_verts.at(n).normal_index;
-                    int vn1_idx = face_group.face_verts.at(n+1).normal_index;
-                    int vn2_idx = face_group.face_verts.at(n+2).normal_index;
+                    int nv0_idx = face_group.face_verts.at(n).normal_index;
+                    int nv1_idx = face_group.face_verts.at(n+1).normal_index;
+                    int nv2_idx = face_group.face_verts.at(n+2).normal_index;
 
                     shared_ptr<triangle> tri;
 
-                    if (vn0_idx != -1 &&
-                        vn1_idx != -1 &&
-                        vn2_idx != -1) {
+                    if (tv0_idx != -1 &&
+                        tv1_idx != -1 &&
+                        tv2_idx != -1 &&
+                        nv0_idx != -1 &&
+                        nv1_idx != -1 &&
+                        nv2_idx != -1
+                    ) {
                         tri = make_shared<triangle>(
                             verts.at(v0_idx),
                             verts.at(v1_idx),
                             verts.at(v2_idx),
-                            norms.at(vn0_idx),
-                            norms.at(vn1_idx),
-                            norms.at(vn2_idx),
+                            texs.at(tv0_idx),
+                            texs.at(tv1_idx),
+                            texs.at(tv2_idx),
+                            norms.at(nv0_idx),
+                            norms.at(nv1_idx),
+                            norms.at(nv2_idx),
                             mat
                         );
+                    } else if (
+                        tv0_idx != -1 &&
+                        tv1_idx != -1 &&
+                        tv2_idx != -1
+                    ) {
+                        tri = make_shared<triangle>(
+                            verts.at(v0_idx),
+                            verts.at(v1_idx),
+                            verts.at(v2_idx),
+                            texs.at(tv0_idx),
+                            texs.at(tv1_idx),
+                            texs.at(tv2_idx),
+                            mat,
+                            true
+                        );
+                    } else if (
+                        nv0_idx != -1 &&
+                        nv1_idx != -1 &&
+                        nv2_idx != -1
+                    ) {
+                        tri = make_shared<triangle>(
+                            verts.at(v0_idx),
+                            verts.at(v1_idx),
+                            verts.at(v2_idx),
+                            norms.at(nv0_idx),
+                            norms.at(nv1_idx),
+                            norms.at(nv2_idx),
+                            mat,
+                            false
+                        );
+                    
                     } else {
                         tri = make_shared<triangle>(
                             verts.at(v0_idx),
@@ -136,12 +178,11 @@ class obj_parser {
                             mat
                         );
                     }
-                    
+
                     object->add(tri);
                 }
                 objects->add(object);
             }
-
             return objects;
         }
     private:

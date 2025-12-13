@@ -17,7 +17,9 @@ struct camera_config {
     int image_height = 480;
     double vfov = 90;
     vec3 lookfrom, lookat, up;
-    int samples_per_pixel = 0;
+    int samples_per_batch = 8;
+    int batches_per_pixel = 4;
+    double max_tolerance = 0.05;
     int max_depth = 3;
     double defocus_angle = 0;
     double focus_dist = 10;
@@ -34,18 +36,7 @@ class camera {
          * Constructs a default camera
          */
         camera(): 
-            lookfrom(camera_config().lookfrom),
-            lookat(camera_config().lookat),
-            up(camera_config().up),
-            image_width(camera_config().image_width),
-            image_height(camera_config().image_height),
-            vfov(camera_config().vfov),
-            samples_per_pixel(camera_config().samples_per_pixel),
-            max_depth(camera_config().max_depth),
-            defocus_angle(camera_config().defocus_angle),
-            focus_dist(camera_config().focus_dist),
-            gamma(camera_config().gamma),
-            background(camera_config().background) {
+            camera(camera_config()) {
                 init();
         };
 
@@ -62,7 +53,9 @@ class camera {
             image_width(config.image_width),
             image_height(config.image_height),
             vfov(config.vfov),
-            samples_per_pixel(config.samples_per_pixel),
+            batches_per_pixel(config.batches_per_pixel),
+            samples_per_batch(config.samples_per_batch),
+            max_tolerance(config.max_tolerance),
             max_depth(config.max_depth),
             defocus_angle(config.defocus_angle),
             focus_dist(config.focus_dist),
@@ -81,7 +74,7 @@ class camera {
         void render(const collidable& world, const std::string& filename, int num_threads = 1) {
             bool multithreaded = num_threads > 1;
             std::clog << "Rendering " << filename << " using " << (multithreaded ? num_threads : 1) << " thread" << (multithreaded ? "s:" : ":") << std::endl;
-            const bool anti_alias = samples_per_pixel > 0;
+            const bool anti_alias = samples_per_batch > 0;
             print_progress(0);
 
             if (multithreaded) {
@@ -129,28 +122,6 @@ class camera {
             output_ppm_image(img, filename);
         }
 
-        /**
-         * Renders a single pixel on this camera's image
-         * @param x image x coord
-         * @param y image y coord
-         * @param world collidable to render
-         * @param anti_alias if true, use multiple randomly sampled rays, if false, use only one ray
-         */
-        void render_pixel(int x, int y, const collidable& world, bool anti_alias) {
-            color pixel_color = color();
-            if (anti_alias) {
-                for (int sample = 0; sample < samples_per_pixel; sample++) {
-                    ray r = get_ray(x, y, sample_square());
-                    pixel_color += ray_color(r, world, max_depth);
-                }
-                pixel_color = linear_to_gamma(pixel_color/samples_per_pixel);
-            } else {
-                ray r = get_ray(x, y, vec3());
-                pixel_color = linear_to_gamma(ray_color(r, world, max_depth));
-            }
-            img[y][x] = pixel_color;
-        }
-
     private:
         /**
          * The center or origin of the camera in 3D space
@@ -173,11 +144,22 @@ class camera {
         vec3 i, j, k;
 
         /**
-         * The number of samples used for anti-aliasing
+         * The number of samples to take per batch of adaptive sampling
+         * 
+         */
+        int samples_per_batch;
+
+        /**
+         * The number of sample batches used for anti-aliasing
          * 
          * If set to zero, no anti-aliasing is used
          */
-        int samples_per_pixel;
+        int batches_per_pixel;
+
+        /**
+         * The number used to determine the level of convergence necessary for adaptive sampling
+         */
+        double max_tolerance;
 
         /**
          * The maximum number of ray bounces allowed
@@ -270,6 +252,49 @@ class camera {
             defocus_disk_v = j * defocus_radius;
 
             img = image(image_height, std::vector<color>(image_width, color()));
+        }
+
+        /**
+         * Renders a single pixel on this camera's image
+         * @param x image x coord
+         * @param y image y coord
+         * @param world collidable to render
+         * @param anti_alias if true, use multiple randomly sampled rays, if false, use only one ray
+         */
+        void render_pixel(int x, int y, const collidable& world, bool anti_alias) {
+            color pixel_color = color();
+            if (anti_alias) {
+                double s1 = 0;
+                double s2 = 0;
+                int n = 0;
+                for (int batch = 0; batch < batches_per_pixel; batch++) {
+                    for (int sample = 0; sample < samples_per_batch; sample++) {
+                        ray r = get_ray(x, y, sample_square());
+                        color c = ray_color(r, world, max_depth);
+                        pixel_color += c;
+                        s1 += illuminance(c);
+                        s2 += std::pow(illuminance(c), 2);
+                        n++;
+                    }
+                    // Last batch doesn't require these additional calculations,
+                    // skip if the last batch was calculated
+                    if (batch == batches_per_pixel - 1) break;
+
+                    // Check if we have converged to a single value
+                    double mu = s1/n;
+                    double epsilon2 = (s2 - std::pow(s1, 2)/n)/(n-1);
+
+                    // Construct a 95% confidence interval
+                    double I = 1.96 * std::sqrt(epsilon2/n);
+                    if (I <= max_tolerance*mu) break;
+                }
+                // pixel_color = lerp(color(), color(1, 1, 1), n/(batches_per_pixel*samples_per_batch));
+                pixel_color = linear_to_gamma(pixel_color/n);
+            } else {
+                ray r = get_ray(x, y, vec3());
+                pixel_color = linear_to_gamma(ray_color(r, world, max_depth));
+            }
+            img[y][x] = pixel_color;
         }
 
         /**

@@ -5,7 +5,8 @@ OBJ := ./obj
 CXX = g++
 CXXFLAGS = -Wall -g
 
-all: $(BIN)/vec3test.exe $(BIN)/imagewriting.exe $(BIN)/barycentric.exe $(BIN)/triangle_texturing.exe $(BIN)/image.exe $(BIN)/sphere.exe $(BIN)/main.exe 
+all: $(BIN)/vec3test.exe $(BIN)/imagewriting.exe $(BIN)/barycentric.exe $(BIN)/triangle_texturing.exe $(BIN)/image.exe $(BIN)/main.exe
+# $(BIN)/sphere.exe 
 
 $(BIN)/vec3test.exe: $(OBJ)/vec3test.o | $(BIN)
 	$(CXX) $(CXXFLAGS) $^ -o $@

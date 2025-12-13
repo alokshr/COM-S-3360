@@ -32,4 +32,13 @@ color color_rgb_to_float(color c) {
         clamp(c[2], 0, 255.99) / 255.99
     );
 }
+
+/**
+ * Calculates RGB illuminance from a given color
+ * @param c color to calculate illuminance from
+ */
+double illuminance(color c) {
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+
+}
 #endif

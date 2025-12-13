@@ -10,7 +10,35 @@ using std::shared_ptr;
 class triangle : public collidable {
     public:
         /**
-         * Creates a non-normally interpolated triangle given three vertices and a material
+         * Creates a triangle given three vertices, three vertex texture coodinates, three vertex normals, and a material
+         * @param a starting vertex
+         * @param b next vertex
+         * @param c ending vertex
+         * @param ta starting vertex texture coords
+         * @param tb next vertex texture coords
+         * @param tc ending vertex texture coords
+         * @param na starting vertex normal
+         * @param nb next vertex normal
+         * @param nc ending vertex normal
+         * @param mat material of triangle
+         */
+        triangle(
+            vec3 a, vec3 b, vec3 c,
+            vec3 ta, vec3 tb, vec3 tc,
+            vec3 na, vec3 nb, vec3 nc,
+            shared_ptr<material> mat) :
+            a(a), b(b), c(c),
+            ta(ta), tb(tb), tc(tc),
+            na(na.normalize()), nb(nb.normalize()), nc(nc.normalize()),
+            mat(mat), interpolated(true) {
+            
+            aabb ab = aabb(a, b);
+            aabb ac = aabb(a, c);
+            bbox = aabb(ab, ac);
+        }
+
+        /**
+         * Creates a triangle given three vertices and a material
          * @param a starting vertex
          * @param b next vertex
          * @param c ending vertex
@@ -21,31 +49,51 @@ class triangle : public collidable {
             aabb ac = aabb(a, c);
             bbox = aabb(ab, ac);
 
+            ta = vec3(0, 0, 0);
+            tb = vec3(1, 0, 0);
+            tc = vec3(0, 1, 0);
             normal = vec3::cross(b-a, c-a).normalize();
+            na = nb = nc = normal;
         }
 
         /**
-         * Creates a normally interpolated triangle given three vertices, three vertex normals, and a material
+         * Creates a triangle given three vertices, three vertex texture coordinates or three vertex normals, and a material
          * @param a starting vertex
          * @param b next vertex
          * @param c ending vertex
-         * @param an starting vertex normal
-         * @param bn next vertex normal
-         * @param cn ending vertex normal
+         * @param ea starting vertex texture coordinate or normal
+         * @param eb next vertex texture coordinate or normal
+         * @param ec ending vertex texture coordinate or normal
          * @param mat material of triangle
+         * @param is_tex_coords true if ea, eb, ec represent vertex texture coordinates,
+         *                      false if ea, eb, ec represent vertex normals
          */
         triangle(
             vec3 a, vec3 b, vec3 c,
-            vec3 an, vec3 bn, vec3 cn,
-            shared_ptr<material> mat) :
-            a(a), b(b), c(c),
-            an(an), bn(bn), cn(cn),
-            mat(mat), interpolated(true) {
+            vec3 ea, vec3 eb, vec3 ec,
+            shared_ptr<material> mat, bool is_tex_coords) : a(a), b(b), c(c), mat(mat) {
             
+            if (is_tex_coords) {
+                ta = ea;
+                tb = eb;
+                tc = ec;
+                na = nb = nc = vec3::cross(b-a, c-a).normalize();
+                interpolated = false;
+            } else {
+                na = ea;
+                nb = eb;
+                nc = ec;
+                ta = vec3(0, 0, 0);
+                tb = vec3(1, 0, 0);
+                tc = vec3(0, 1, 0);
+                interpolated = true;
+            }
+
             aabb ab = aabb(a, b);
             aabb ac = aabb(a, c);
             bbox = aabb(ab, ac);
         }
+
 
         bool hit(const ray& r, interval ray_t, collision_hit& rec) const {
             // Fast, Minimum Storage Ray/Triangle Intersection implementation
@@ -64,16 +112,16 @@ class triangle : public collidable {
                 return false;
             }
             
-            // Check u and v coords for collision
+            // Check barycentric coords (alpha, beta) for collision
             vec3 T = r.origin() - a;
-            double u = vec3::dot(T, P) / det;
-            if (u < 0 || u > 1) {
+            double alpha = vec3::dot(T, P) / det;
+            if (alpha < 0 || alpha > 1) {
                 return false;
             }
 
             const vec3 Q = vec3::cross(T, e1);
-            double v = vec3::dot(r.direction(), Q) / det;
-            if (v < 0 || u + v > 1) {
+            double beta = vec3::dot(r.direction(), Q) / det;
+            if (beta < 0 || alpha + beta > 1) {
                 return false;
             }
 
@@ -88,15 +136,17 @@ class triangle : public collidable {
             // Updating collision info
             rec.mat = mat;
             rec.t = t;
-            rec.u = u;
-            rec.v = v;
 
+            vec3 tex_coords = alpha*ta + beta*tb + (1-alpha-beta)*tc;
+
+            rec.u = tex_coords[0];
+            rec.v = tex_coords[1];
+
+            rec.point = r.at(t);
             if (!interpolated) {
-                rec.point = r.at(t);
                 rec.set_face_normal(r, normal);
             } else {
-                rec.point = u*a + v*b + (1-u-v)*c;
-                rec.set_face_normal(r, (u*an + v*bn + (1-u-v)*cn).normalize());
+                rec.set_face_normal(r, alpha*na + beta*nb + (1-alpha-beta)*nc);
             }
             
             return true;            
@@ -109,9 +159,14 @@ class triangle : public collidable {
         vec3 a, b, c;
 
         /**
-         * The normals of each vertex if given;
+         * The texture coords of each vertex, if given
          */
-        vec3 an, bn, cn;
+        vec3 ta, tb, tc;
+
+        /**
+         * The normals of each vertex, if given
+         */
+        vec3 na, nb, nc;
         
         /**
          * The face normal of this triangle
