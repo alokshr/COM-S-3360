@@ -77,12 +77,12 @@ class triangle : public collidable {
                 ta = ea;
                 tb = eb;
                 tc = ec;
-                na = nb = nc = vec3::cross(b-a, c-a).normalize();
+                na = nb = nc = normal = vec3::cross(b-a, c-a).normalize();
                 interpolated = false;
             } else {
-                na = ea;
-                nb = eb;
-                nc = ec;
+                na = ea.normalize();
+                nb = eb.normalize();
+                nc = ec.normalize();
                 ta = vec3(0, 0, 0);
                 tb = vec3(1, 0, 0);
                 tc = vec3(0, 1, 0);
@@ -137,7 +137,7 @@ class triangle : public collidable {
             rec.mat = mat;
             rec.t = t;
 
-            vec3 tex_coords = alpha*ta + beta*tb + (1-alpha-beta)*tc;
+            vec3 tex_coords = (1-alpha-beta)*ta + alpha*tb + beta*tc;
 
             rec.u = tex_coords[0];
             rec.v = tex_coords[1];
@@ -146,7 +146,7 @@ class triangle : public collidable {
             if (!interpolated) {
                 rec.set_face_normal(r, normal);
             } else {
-                rec.set_face_normal(r, alpha*na + beta*nb + (1-alpha-beta)*nc);
+                rec.set_face_normal(r, ((1-alpha-beta)*na + alpha*nb + beta*nc).normalize());
             }
             
             return true;            

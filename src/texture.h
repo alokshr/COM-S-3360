@@ -138,4 +138,30 @@ class noise_texture : public texture {
         double scale;
 };
 
+class image_texture : public texture {
+    public:
+        image_texture(const std::string filename) : img(filename) {}
+
+        color value(double u, double v, const vec3& p) const override {
+            if (img.height() <= 0) return color(0, 1, 1);
+
+            u = clamp(u, 0, 1);
+            v = 1.0 - clamp(v, 0, 1);
+
+            int x = int(u * img.width());
+            int y = int(v * img.height());
+            const unsigned char* pixel = img.get_pixel(x, y);
+            double scale = 1.0/255.0;
+
+            return scale*color(
+                pixel[0],
+                pixel[1],
+                pixel[2]
+            );
+        }
+
+    private:
+        tex_image img;
+};
+
 #endif

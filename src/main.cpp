@@ -90,7 +90,9 @@ void checkered_spheres() {
         vec3(13, 2, 3), //  vec3 lookfrom;
         vec3(0, 0, 0),  //  vec3 lookat;
         vec3(0, 1, 0),  //  vec3 up;
-        100,            //  int samples_per_pixel;
+        4,              //  int samples_per_batch;
+        8,              //  int batches_per_pixel;
+        0.05,           //  double max_tolerance;
         50,             //  int max_depth;
         0.6,            //  double defocus_angle;
         10,             //  double defocus_dist;
@@ -101,6 +103,35 @@ void checkered_spheres() {
     
 
     cam.render(world, "checkered_sphere.ppm", std::thread::hardware_concurrency()-1);
+}
+
+void earth() {
+    collidable_list world;
+    auto earth_texture = make_shared<image_texture>("resources/earthmap.jpg");
+    auto earth_surface = make_shared<lambertian>(earth_texture);
+    auto globe = make_shared<sphere>(vec3(0,0,0), 2, earth_surface);
+
+    world.add(globe);
+
+    camera_config config = {
+        400,            //  int image_width;
+        225,            //  int image_height;
+        20,             //  double vfov;
+        vec3(0, 0, 12), //  vec3 lookfrom;
+        vec3(0, 0, 0),  //  vec3 lookat;
+        vec3(0, 1, 0),  //  vec3 up;
+        4,              //  int samples_per_batch;
+        8,              //  int batches_per_pixel;
+        0.05,           //  double max_tolerance;
+        50,             //  int max_depth;
+        0,              //  double defocus_angle;
+        10,             //  double defocus_dist;
+        2               //  double gamma;
+    };
+
+    camera cam(config);
+
+    cam.render(world, "earth.ppm", std::thread::hardware_concurrency());
 }
 
 void perlin_spheres() {
@@ -117,7 +148,9 @@ void perlin_spheres() {
         vec3(13, 2, 3), //  vec3 lookfrom;
         vec3(0, 0, 0),  //  vec3 lookat;
         vec3(0, 1, 0),  //  vec3 up;
-        100,            //  int samples_per_pixel;
+        4,              //  int samples_per_batch;
+        8,              //  int batches_per_pixel;
+        0.05,           //  double max_tolerance;
         50,             //  int max_depth;
         0.6,            //  double defocus_angle;
         10,             //  double defocus_dist;
@@ -154,7 +187,9 @@ void quads() {
         vec3(0, 0, 9),  //  vec3 lookfrom;
         vec3(0, 0, 0),  //  vec3 lookat;
         vec3(0, 1, 0),  //  vec3 up;
-        100,            //  int samples_per_pixel;
+        4,              //  int samples_per_batch;
+        8,              //  int batches_per_pixel;
+        0.05,           //  double max_tolerance;
         50,             //  int max_depth;
         0,              //  double defocus_angle;
         10,             //  double defocus_dist;
@@ -256,7 +291,9 @@ void cornell_box() {
         vec3(0, 0, -box_depth),  //  vec3 lookfrom;
         vec3(0, 0, 0),  //  vec3 lookat;
         vec3(0, 1, 0),  //  vec3 up;
-        100,            //  int samples_per_pixel;
+        4,              //  int samples_per_batch;
+        8,              //  int batches_per_pixel;
+        0.05,           //  double max_tolerance;
         50,             //  int max_depth;
         0,              //  double defocus_angle;
         10,             //  double defocus_dist;
@@ -307,7 +344,9 @@ void triangle_test() {
         vec3(0, 0, 0),  //  vec3 lookfrom;
         vec3(0, 0.125, 1),  //  vec3 lookat;
         vec3(0, 1, 0),  //  vec3 up;
-        100,            //  int samples_per_pixel;
+        4,              //  int samples_per_batch;
+        8,              //  int batches_per_pixel;
+        0.05,           //  double max_tolerance;
         50,             //  int max_depth;
         0,              //  double defocus_angle;
         10,             //  double defocus_dist;
@@ -357,7 +396,9 @@ void obj_file_test() {
         vec3(100, 80, 20),  //  vec3 lookfrom;
         vec3(0, 0, 0),  //  vec3 lookat;
         vec3(0, 0, 1),  //  vec3 up;
-        100,            //  int samples_per_pixel;
+        4,              //  int samples_per_batch;
+        8,              //  int batches_per_pixel;
+        0.05,           //  double max_tolerance;
         50,             //  int max_depth;
         0,              //  double defocus_angle;
         10,             //  double defocus_dist;
@@ -429,7 +470,9 @@ void obj_file_test_comparision() {
         vec3(100, 80, 20),  //  vec3 lookfrom;
         vec3(0, 0, 0),  //  vec3 lookat;
         vec3(0, 0, 1),  //  vec3 up;
-        100,            //  int samples_per_pixel;
+        4,              //  int samples_per_batch;
+        8,              //  int batches_per_pixel;
+        0.05,           //  double max_tolerance;
         50,             //  int max_depth;
         0,              //  double defocus_angle;
         10,             //  double defocus_dist;
@@ -455,11 +498,14 @@ void cube() {
     auto shiny = make_shared<metal>(color(1, .73, .73), 0);
     auto checker_tex = make_shared<checker_texture>(0.6, color(.2, .3, .1), color(.9, .9, .9));
     auto checker_mat = make_shared<lambertian>(checker_tex);
+    auto die_tex = make_shared<image_texture>("resources/die-tex.png");
+    auto die_mat = make_shared<lambertian>(die_tex);
 
     obj_parser p = obj_parser();
-    p.parse_obj_file("resources/cube.obj");
+    p.parse_obj_file("resources/cube-tex.obj");
+    
 
-    auto model = p.generate_triangles(shiny);
+    auto model = p.generate_triangles(die_mat);
     
     auto floor = make_shared<quad>(
         vec3(-5000, -5000, -1),
@@ -481,7 +527,7 @@ void cube() {
         vec3(0, 0, 0),  //  vec3 lookat;
         vec3(0, 0, 1),  //  vec3 up;
         4,              //  int samples_per_batch;
-        64,             //  int batches_per_pixel;
+        32,             //  int batches_per_pixel;
         0.005,          //  double max_tolerance;
         50,             //  int max_depth;
         0,              //  double defocus_angle;
@@ -501,6 +547,8 @@ void teapot() {
     // Materials
     auto red   = make_shared<lambertian>(color(.65, .05, .05));
     auto shiny = make_shared<metal>(color(.73, .73, .73), 0);
+    auto checker_tex = make_shared<checker_texture>(0.6, color(.2, .3, .1), color(.9, .9, .9));
+    auto checker_mat = make_shared<lambertian>(checker_tex);
 
     obj_parser p = obj_parser();
     p.parse_obj_file("resources/teapot.obj");
@@ -511,7 +559,7 @@ void teapot() {
         vec3(-5000, -100, -5000),
         vec3(10000, 0, 0),
         vec3(0, 0, 10000),
-        red
+        checker_mat
     );
     
     world.add(model);
@@ -523,10 +571,12 @@ void teapot() {
         400,            //  int image_width;
         400,            //  int image_height;
         80,             //  double vfov;
-        vec3(100, 50, -200)*0.8,  //  vec3 lookfrom;
+        vec3(100, 100, -200)*0.11,  //  vec3 lookfrom;
         vec3(0, 0, 0),  //  vec3 lookat;
         vec3(0, 1, 0),  //  vec3 up;
-        10,            //  int samples_per_pixel;
+        4,              //  int samples_per_batch;
+        32,              //  int batches_per_pixel;
+        0.005,           //  double max_tolerance;
         50,             //  int max_depth;
         0,              //  double defocus_angle;
         10,             //  double defocus_dist;
@@ -538,12 +588,11 @@ void teapot() {
     cam.render(world, "teapot.ppm", std::thread::hardware_concurrency());
 }
 
-
 void load_demo(int selection) {
     switch (selection) {
         case 1: bouncing_spheres();             break;
         case 2: checkered_spheres();            break;
-        // case 3: earth();                        break;
+        case 3: earth();                        break;
         case 4: perlin_spheres();               break;
         case 5: quads();                        break;
         case 6: simple_light();                 break;
@@ -553,6 +602,7 @@ void load_demo(int selection) {
         case 10: obj_file_test_comparision();   break;
         case 11: cube();   break;
         case 12: teapot();                      break;
+        default:                                break;
     }
 }
 
@@ -561,13 +611,14 @@ int main(int argc, const char** argv) {
     if (argc < 2) {
         std::cout <<
             "usage: main.exe [demo number] [other demo numbers...]\n"
-            "\n"
             "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
             "Renders the given demos\n"
+            "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
             "\n"
             "Demos: \n"
             "1: Bouncing Spheres\n"
             "2: Checkered Floor\n"
+            "3: Earth\n"
             "4: Perlin Sphere\n"
             "5: Quads\n"
             "6: Simple Light\n"

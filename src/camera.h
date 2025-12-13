@@ -158,6 +158,7 @@ class camera {
 
         /**
          * The number used to determine the level of convergence necessary for adaptive sampling
+         * Values closer to 0 require more sampling
          */
         double max_tolerance;
 
@@ -276,10 +277,7 @@ class camera {
                         s2 += std::pow(illuminance(c), 2);
                         n++;
                     }
-                    // Last batch doesn't require these additional calculations,
-                    // skip if the last batch was calculated
-                    if (batch == batches_per_pixel - 1) break;
-
+                    if (n < 2) continue;
                     // Check if we have converged to a single value
                     double mu = s1/n;
                     double epsilon2 = (s2 - std::pow(s1, 2)/n)/(n-1);
