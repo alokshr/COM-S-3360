@@ -3,6 +3,7 @@
 
 #include "renderlib.h"
 #include "aabb.h"
+#include "quaternion.h"
 
 class material;
 
@@ -48,5 +49,106 @@ class collidable {
          * @return bounding box
          */
         virtual aabb bounding_box() const = 0;
+};
+
+/**
+ * A class for translating collidable objects around in 3D space
+ */
+class translate : public collidable {
+    public:
+        /**
+         * Creates a translated copy of an existing collidable object
+         * @param obj original object
+         * @param offset translation offset from original object
+         */
+        translate(shared_ptr<collidable> obj, vec3 offset):obj(obj), offset(offset) {
+            bbox = obj->bounding_box() + offset;
+        }
+
+        bool hit(const ray& r, interval ray_t, collision_hit& rec) const override {
+            // Offset our ray to mimic moving this object 
+            ray offset_r(r.origin() - offset, r.direction(), r.time());
+
+            // Use object's hit function with offset ray
+            if (!obj->hit(offset_r, ray_t, rec)) return false;
+
+            // Make sure to update hit point with offset
+            rec.point += offset;
+
+            return true;
+        }
+
+        aabb bounding_box() const { return bbox; }
+
+    private:
+        /**
+         * The object affected by this translation
+         */
+        shared_ptr<collidable> obj;
+        
+        /**
+         * The offset of this translation
+         */
+        vec3 offset;
+        
+        /**
+         * The updated bounding box after being moved by this translation
+         */
+        aabb bbox;
+};
+
+
+/**
+ * A class for translating collidable objects around in 3D space
+ */
+class rotate : public collidable {
+    public:
+        /**
+         * Creates a translated copy of an existing collidable object
+         * @param obj original object
+         * @param offset translation offset from original object
+         */
+        rotate(shared_ptr<collidable> obj, vec3 axis, double degrees): obj(obj), axis(axis.normalize()), degrees(degrees) {}
+
+        bool hit(const ray& r, interval ray_t, collision_hit& rec) const override {
+            // Transform the ray into object space
+            vec3 orig = rotate_by_axis(r.origin(), axis, -degrees);
+            vec3 dir = rotate_by_axis(r.direction(), axis, -degrees);
+
+            ray rotated_r(orig, dir, r.time());
+
+            if (!obj->hit(rotated_r, ray_t, rec)) {
+                return false;
+            }
+
+            // Transform normal and collision point back to world space
+            rec.normal = rotate_by_axis(rec.normal, axis, degrees);
+            rec.point = rotate_by_axis(rec.point, axis, degrees);
+
+            return true;
+        }
+
+        aabb bounding_box() const { return bbox; }
+
+    private:
+        /**
+         * The object affected by this rotation
+         */
+        shared_ptr<collidable> obj;
+        
+        /**
+         * The axis this rotation is based around
+         */
+        vec3 axis;
+
+        /**
+         * The amount to rotate by in degrees
+         */
+        double degrees;
+        
+        /**
+         * The updated bounding box after being moved by this rotation
+         */
+        aabb bbox;
 };
 #endif

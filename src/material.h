@@ -31,9 +31,26 @@ class material {
          * @return true if material scatters, false if material does not scatter
          */
         virtual bool scatter(
-            const ray& r_in, const collision_hit& rec, color& attenuation, ray& scattered
-        ) const {
+            const ray& r_in,
+            const collision_hit& rec,
+            color& attenuation, ray& scattered)
+        const {
             return false;
+        }
+
+        /**
+         * Returns the scattering pdf associated with this material
+         * @param r_in incoming ray to scatter
+         * @param rec collision info of ray
+         * @param scattered outgoing scattered ray
+         * @return pdf of material
+         */
+        virtual double scattering_pdf(
+            const ray& r_in,
+            const collision_hit& rec,
+            const ray& scattered)
+        const {
+            return 0;
         }
 };
 
@@ -65,6 +82,15 @@ class lambertian : public material {
             scattered = ray(rec.point, scatter_dir, r_in.time());
             attenuation = tex->value(rec.u, rec.v, rec.point);
             return true;
+        }
+
+        double scattering_pdf(
+            const ray& r_in,
+            const collision_hit& rec,
+            const ray& scattered)
+        const override {
+            double cos_theta = vec3::dot(rec.normal, scattered.direction().normalize());
+            return cos_theta < 0 ? 0 : cos_theta/M_PI; 
         }
 
     private:

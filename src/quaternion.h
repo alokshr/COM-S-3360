@@ -6,25 +6,43 @@
 
 class quaternion {
     public:
+        /**
+         * The real component of this quaternion
+         */
         double s;
+
+        /**
+         * The imaginary components of this quaternion
+         */
         vec3 v;
+
+        /**
+         * Creates a quaternion with all components set to 0
+         */
         quaternion() {};
+
+        /**
+         * Creates a quaternion given the real and imaginary components
+         * @param s real component
+         * @param v imaginary components
+         */
         quaternion(double s, vec3 v): s(s), v(v) {}
 
         /**
          * Multiplies two quaternions
          * 
          * pq = <s_p*a_q - v_p.v_q, v_p x v_q + v_p*s_q + s_q*v_p>
+         * @param q quaternion to be multiplied by
          */
         quaternion operator*(const quaternion& q) const {
             return quaternion(
                 s*q.s - vec3::dot(v, q.v),
-                vec3::cross(v, q.v) + (s*q.v)
+                vec3::cross(v, q.v) + s*q.v + q.s*v
             );
         }
 };
 
-void rotate(vec3& v, vec3 axis, double degrees) {
+static vec3 rotate_by_axis(const vec3& v, vec3 axis, double degrees) {
     // Rotation = <cos(theta/2), x sin(t/2), y sin(t/2), z sin(t/2)>
     double t = d2r(degrees);
     double sint2 = sin(t/2.0);
@@ -39,12 +57,12 @@ void rotate(vec3& v, vec3 axis, double degrees) {
     );
 
     quaternion p = quaternion(
-        1,
+        0,
         v
     );
 
     quaternion qinv = quaternion(
-        1,
+        q.s,
         -q.v
     );
 
@@ -53,6 +71,6 @@ void rotate(vec3& v, vec3 axis, double degrees) {
     // Reversing p = q * p' * q^-1
     quaternion pprime = q*p*qinv;
 
-    v = pprime.v;
+    return pprime.v;
 }
 #endif

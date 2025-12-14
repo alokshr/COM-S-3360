@@ -212,7 +212,11 @@ void simple_light() {
     world.add(make_shared<quad>(vec3(3,1,-2), vec3(2,0,0), vec3(0,2,0), difflight));
     world.add(make_shared<sphere>(vec3(0,7,0), 2, difflight));
 
-     camera_config config = {
+    auto background_tex = make_shared<solid_color>(color(0,0,0));
+
+    cube_map background = cube_map(background_tex);
+
+    camera_config config = {
         400,            //  int image_width;
         225,            //  int image_height;
         20,             //  double vfov;
@@ -226,7 +230,7 @@ void simple_light() {
         0,              //  double defocus_angle;
         10,             //  double defocus_dist;
         2,              //  double gamma;
-        color(0,0,0)    //  color background;
+        background      // cube_map background;
     };
 
     camera cam(config);
@@ -243,61 +247,39 @@ void cornell_box() {
     auto green = make_shared<lambertian>(color(.12, .45, .15));
     auto light = make_shared<diffuse_light>(color(15, 15, 15));
 
-    double box_width = 500;   // x
-    double box_height = 500;  // y
-    double box_depth = 500;   // z
-    double light_width = box_width/5;
-    double light_depth = box_depth/5;
+    // Walls
+    world.add(make_shared<quad>(vec3(555,0,0), vec3(0,555,0), vec3(0,0,555), green));
+    world.add(make_shared<quad>(vec3(0,0,0), vec3(0,555,0), vec3(0,0,555), red));
+    // world.add(make_shared<quad>(vec3(343, 554, 332), vec3(-130,0,0), vec3(0,0,-105), light));
+    world.add(make_shared<quad>(vec3(0,0,0), vec3(555,0,0), vec3(0,0,555), white));
+    // world.add(make_shared<quad>(vec3(555,555,555), vec3(-555,0,0), vec3(0,0,-555), white));
+    world.add(make_shared<quad>(vec3(0,0,555), vec3(555,0,0), vec3(0,555,0), white));
 
-    vec3 bottomleft_front_corner = vec3(box_width/2, -box_height/2, -box_depth/2);
-    vec3 topright_back_corner = -bottomleft_front_corner;
-    vec3 light_origin = topright_back_corner + vec3((box_width-light_width)/2, 0, -(box_depth-light_depth)/2);
+    // Inside boxes
+    shared_ptr<collidable> box1 = box(vec3(0,0,0), vec3(165,330,165), white);
+    box1 = make_shared<rotate>(box1, vec3(0, 1, 0), 15);
+    box1 = make_shared<translate>(box1, vec3(265,0,295));
+    world.add(box1);
 
-    auto floor = make_shared<quad>(bottomleft_front_corner, vec3(0, 0, box_depth), vec3(-box_width, 0, 0), white);
-    auto ceiling = make_shared<quad>(topright_back_corner, vec3(0, 0, -box_depth), vec3(box_width, 0, 0), white);
-    auto ceiling_light = make_shared<quad>(light_origin, vec3(0, 0, -light_depth), vec3(light_width, 0, 0), light);
-
-    auto back_wall = make_shared<quad>(topright_back_corner, vec3(0, -box_height, 0), vec3(box_width, 0, 0), white);
-    
-    auto left_wall = make_shared<quad>(bottomleft_front_corner, vec3(0, box_height, 0), vec3(0, 0, box_depth), green);
-    auto right_wall = make_shared<quad>(topright_back_corner, vec3(0, -box_height, 0), vec3(0, 0, -box_depth), red);
-    
-    auto b1 = box(vec3(box_width/4, -box_height/2, box_depth/3), vec3(box_width/4, box_height/10, box_depth), white);
-    // auto b2 = box(vec3());
-
-    world.add(floor);
-    world.add(ceiling);
-    world.add(ceiling_light);
-    world.add(back_wall);
-    world.add(left_wall);
-    world.add(right_wall);
-
-    world.add(b1);
-
-    // shared_ptr<sphere> centerpiece = make_shared<sphere>(vec3(0, 0, 4), 1, left_red);
-    // world.add(centerpiece);
-
-    // Quads
-    // world.add(make_shared<quad>(vec3(-2,-2, 0), vec3(4, 0, 0), vec3(0, 4, 0), back_green));
-    // world.add(make_shared<quad>(vec3( 3,-2, 2), vec3(0, 0, 4), vec3(0, 4, 0), right_blue));
-    // world.add(make_shared<quad>(vec3(-2, 3, 2), vec3(4, 0, 0), vec3(0, 0, 4), upper_orange));
-    // world.add(make_shared<quad>(vec3(-2,-3, 5), vec3(4, 0, 0), vec3(0, 0,-4), lower_teal));
-
+    shared_ptr<collidable> box2 = box(vec3(0,0,0), vec3(165,165,165), white);
+    box2 = make_shared<rotate>(box2, vec3(0, 1, 0), -18);
+    box2 = make_shared<translate>(box2, vec3(130,0,65));
+    world.add(box2);
 
     camera_config config = {
-        400,            //  int image_width;
-        400,            //  int image_height;
-        80,             //  double vfov;
-        vec3(0, 0, -box_depth),  //  vec3 lookfrom;
-        vec3(0, 0, 0),  //  vec3 lookat;
-        vec3(0, 1, 0),  //  vec3 up;
-        4,              //  int samples_per_batch;
-        8,              //  int batches_per_pixel;
-        0.05,           //  double max_tolerance;
-        50,             //  int max_depth;
-        0,              //  double defocus_angle;
-        10,             //  double defocus_dist;
-        2               //  double gamma;
+        600,                    //  int image_width;
+        600,                    //  int image_height;
+        40,                     //  double vfov;
+        vec3(278, 278, -800),   //  vec3 lookfrom;
+        vec3(278, 278, 0),      //  vec3 lookat;
+        vec3(0, 1, 0),          //  vec3 up;
+        4,                      //  int samples_per_batch;
+        8,                      //  int batches_per_pixel;
+        0.05,                   //  double max_tolerance;
+        50,                     //  int max_depth;
+        0,                      //  double defocus_angle;
+        10,                     //  double defocus_dist;
+        2                       //  double gamma;
     };
 
     camera cam(config);
@@ -463,6 +445,8 @@ void obj_file_test_comparision() {
 
     world = collidable_list(make_shared<kd_tree>(world));
 
+    cube_map background = cube_map(tex_image("resources/Earth_cube_map.png"));
+
     camera_config config = {
         400,            //  int image_width;
         400,            //  int image_height;
@@ -471,12 +455,13 @@ void obj_file_test_comparision() {
         vec3(0, 0, 0),  //  vec3 lookat;
         vec3(0, 0, 1),  //  vec3 up;
         4,              //  int samples_per_batch;
-        8,              //  int batches_per_pixel;
-        0.05,           //  double max_tolerance;
+        32,              //  int batches_per_pixel;
+        0.005,           //  double max_tolerance;
         50,             //  int max_depth;
         0,              //  double defocus_angle;
         10,             //  double defocus_dist;
-        2               //  double gamma;
+        2,               //  double gamma;
+        background      //  cube_map background;
     };
 
     camera cam(config);

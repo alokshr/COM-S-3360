@@ -138,11 +138,25 @@ class noise_texture : public texture {
         double scale;
 };
 
+/**
+ * A class for converting images to textures
+ */
 class image_texture : public texture {
     public:
+        /**
+         * Creates an image texture give the image's filename
+         * @param filename name of image file
+         */
         image_texture(const std::string filename) : img(filename) {}
 
+        /**
+         * Creates an image texture given a tex_image
+         * @param img tex_image to turn into texture
+         */
+        image_texture(const tex_image& img) : img(img) {}
+
         color value(double u, double v, const vec3& p) const override {
+            // If image wasn't loaded, return cyan
             if (img.height() <= 0) return color(0, 1, 1);
 
             u = clamp(u, 0, 1);

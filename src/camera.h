@@ -6,6 +6,7 @@
 #include "collidable.h"
 #include "material.h"
 #include "mathutils.h"
+#include "cube_map.h"
 
 #define EPSILON 0.001
 
@@ -24,7 +25,7 @@ struct camera_config {
     double defocus_angle = 0;
     double focus_dist = 10;
     double gamma = 1;
-    color background = color(0.7, 0.8, 1.0);
+    cube_map background = cube_map(make_shared<solid_color>(color(0.7, 0.8, 1.0)));
 };
 
 /**
@@ -200,7 +201,7 @@ class camera {
         /**
          * The background color that appears rays don't hit any objects 
          */
-        color background;
+        cube_map background;
 
         /**
          * The location of the viewport's (0,0) pixel
@@ -325,8 +326,8 @@ class camera {
          * @return vec3 with the coords in the x and y components, z is 0  
          */
         vec3 rand_in_unit_circle() const {
-            double theta = sqrt(random_double())*2*M_PI;
-            return random_double()*vec3(cos(theta), sin(theta), 0);
+            double theta = random_double()*2*M_PI;
+            return std::sqrt(random_double())*vec3(cos(theta), sin(theta), 0);
         }
 
         /**
@@ -369,8 +370,9 @@ class camera {
 
             collision_hit rec;
 
+            // Didn't hit any objects, get cubemap background instead
             if (!world.hit(r, interval(EPSILON, infinity), rec)) {
-                return background;
+                return background.value(r);
             }
 
             ray scattered;
@@ -381,8 +383,11 @@ class camera {
             if (!rec.mat->scatter(r, rec, attenuation, scattered)) {
                 return emission;
             }
+
+            double scattering_pdf = rec.mat->scattering_pdf(r, rec, scattered);
+            double pdf_value = scattering_pdf;
             
-            color scatter = attenuation * ray_color(scattered, world, depth-1);
+            color scatter = (attenuation * scattering_pdf * ray_color(scattered, world, depth-1)) / pdf_value;
 
             return emission + scatter;
 

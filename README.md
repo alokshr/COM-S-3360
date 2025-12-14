@@ -16,14 +16,12 @@ This project is a 3D raytracing program that contains the following features:
 - Depth of field (10)
 - Perlin noise generator (10)
 - Parallelization on pixels (10)
-- Adaptive sampling based on [this paper](https://imae.udg.edu/~rigau/Publications/Rigau03B.pdf) (15)
+- Adaptive sampling based on [these notes](https://cs184.eecs.berkeley.edu/sp21/docs/proj3-1-part-5) (15)
 - Normal interpolation (5)
+- Volumes (10)
+- Cube map (15)
+- Importance sampling (15)
 
-Total: 70
+Total: 110
 
 ### [TODO]
-
-- Volumes (10)
-- Importance sampling (15)
-- Subsurface scattering (BSSRDFs) (30)
-Total: 50 + 75 = 115
