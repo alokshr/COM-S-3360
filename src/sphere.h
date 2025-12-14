@@ -83,6 +83,26 @@ class sphere : public collidable {
 
         aabb bounding_box() const override { return bbox; }
 
+        double pdf_value(const vec3& origin, const vec3& direction) const override {
+            // This method only works for stationary spheres.
+
+            collision_hit rec;
+            if (!this->hit(ray(origin, direction), interval(0.001, infinity), rec))
+                return 0;
+
+            auto dist_squared = (center.at(0) - origin).sqmag();
+            auto cos_theta_max = std::sqrt(1 - radius*radius/dist_squared);
+            auto solid_angle = 2*M_PI*(1-cos_theta_max);
+
+            return  1 / solid_angle;
+        }
+
+        vec3 random(const vec3& origin) const override {
+            vec3 direction = center.at(0) - origin;
+            double distance_squared = direction.sqmag();
+            onb ijk(direction);
+            return ijk.transform(random_to_sphere(radius, distance_squared));
+        }
     private:
         /**
          * The center of this sphere
@@ -126,6 +146,24 @@ class sphere : public collidable {
 
             u = phi / (2*M_PI);
             v = theta / M_PI;
+        }
+
+        /**
+         * Returns a uniformly distributed random direction to a sphere from a point on the z axis
+         * @param radius radius of sphere
+         * @param distance_squared distance squared from sphere
+         * @param random direction to sphere
+         */
+        static vec3 random_to_sphere(double radius, double distance_squared) {
+            double r1 = random_double();
+            double r2 = random_double();
+            double z = 1 + r2*(std::sqrt(1-radius*radius/distance_squared) - 1);
+            
+            double phi = 2*M_PI*r1;
+            double x = std::cos(phi) * std::sqrt(1-z*z);
+            double y = std::sin(phi) * std::sqrt(1-z*z);
+
+            return vec3(x, y, z);
         }
 };
 #endif

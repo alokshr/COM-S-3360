@@ -49,6 +49,25 @@ class collidable {
          * @return bounding box
          */
         virtual aabb bounding_box() const = 0;
+
+        /**
+         * Returns the pdf value associated with this collidable and the given incoming ray
+         * @param origin origin of incoming ray
+         * @param direction direction of incoming ray
+         * @return pdf value of ray
+         */
+        virtual double pdf_value(const vec3& origin, const vec3& direction) const {
+            return 0.0;
+        }
+
+        /**
+         * Returns a random direction towards this collidable
+         * @param origin point to come from
+         * @return direction to collidable
+         */
+        virtual vec3 random(const vec3& origin) const {
+            return vec3(1, 0, 0);
+        }
 };
 
 /**

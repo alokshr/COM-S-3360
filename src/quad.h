@@ -25,6 +25,8 @@ class quad : public collidable{
             d = vec3::dot(normal, q);
             w = n / n.sqmag();
 
+            area = n.mag();
+
             // Set bounding box based on diagonals
             aabb diag1 = aabb(q, q + u + v);
             aabb diag2 = aabb(q + u, q + v);
@@ -78,6 +80,24 @@ class quad : public collidable{
         }
 
         aabb bounding_box() const override { return bbox; }
+
+        double pdf_value(const vec3& origin, const vec3& direction) const override {
+            // Ensure that incoming ray is sampling this quad
+            collision_hit rec;
+            if (!this->hit(ray(origin, direction), interval(0.001, infinity), rec))
+                return 0;
+
+            // Get pdf of the given direction 
+            auto distance_squared = rec.t * rec.t * direction.sqmag();
+            auto cosine = std::fabs(vec3::dot(direction, rec.normal) / direction.mag());
+
+            return distance_squared / (cosine * area);
+        }
+
+        vec3 random(const vec3& origin) const override {
+            vec3 point_on_quad = random_double()*u + random_double()*v;
+            return point_on_quad - origin;
+        }
     private:
         /**
          * The origin point of this quad
@@ -113,6 +133,11 @@ class quad : public collidable{
          * Constant for calculating the t value of a ray collision
          */
         double d;
+
+        /**
+         * The surface area of this quad
+         */
+        double area;
 };
 
 inline shared_ptr<collidable_list> box(const vec3& a, const vec3& b, shared_ptr<material> mat)

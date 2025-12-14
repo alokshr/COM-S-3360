@@ -344,6 +344,22 @@ inline vec3 randvec3_on_hemisphere(const vec3& normal) {
 }
 
 /**
+ * Returns a cosine sampled point on a hemisphere pointed in the Z axis
+ * @return cosine sampled point on hemisphere
+ */
+inline vec3 random_cosine_direction() {
+    auto r1 = random_double();
+    auto r2 = random_double();
+
+    auto phi = 2*M_PI*r1;
+    auto x = std::cos(phi) * std::sqrt(r2);
+    auto y = std::sin(phi) * std::sqrt(r2);
+    auto z = std::sqrt(1-r2);
+
+    return vec3(x, y, z);
+}
+
+/**
  * Returns a linearly interpolated vector between two vectors
  * @param a starting vector
  * @param b ending vector

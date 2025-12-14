@@ -35,6 +35,8 @@ class triangle : public collidable {
             aabb ab = aabb(a, b);
             aabb ac = aabb(a, c);
             bbox = aabb(ab, ac);
+            normal = vec3::cross(b - a, c - a).normalize();
+            area = vec3::cross(b - a, c - a).mag()/2.0;
         }
 
         /**
@@ -54,6 +56,7 @@ class triangle : public collidable {
             tc = vec3(0, 1, 0);
             normal = vec3::cross(b-a, c-a).normalize();
             na = nb = nc = normal;
+            area = vec3::cross(b - a, c - a).mag()/2.0;
         }
 
         /**
@@ -77,7 +80,7 @@ class triangle : public collidable {
                 ta = ea;
                 tb = eb;
                 tc = ec;
-                na = nb = nc = normal = vec3::cross(b-a, c-a).normalize();
+                na = nb = nc = vec3::cross(b-a, c-a).normalize();
                 interpolated = false;
             } else {
                 na = ea.normalize();
@@ -92,8 +95,9 @@ class triangle : public collidable {
             aabb ab = aabb(a, b);
             aabb ac = aabb(a, c);
             bbox = aabb(ab, ac);
+            normal = vec3::cross(b - a, c - a).normalize();
+            area = vec3::cross(b - a, c - a).mag()/2.0;
         }
-
 
         bool hit(const ray& r, interval ray_t, collision_hit& rec) const {
             // Fast, Minimum Storage Ray/Triangle Intersection implementation
@@ -151,7 +155,35 @@ class triangle : public collidable {
             
             return true;            
         }
+        
         aabb bounding_box () const override { return bbox; }
+
+        double pdf_value(const vec3& origin, const vec3& direction) const override {
+            // Ensure that incoming ray is sampling this quad
+            collision_hit rec;
+            if (!this->hit(ray(origin, direction), interval(0.001, infinity), rec))
+                return 0;
+
+            // Get pdf of the given direction 
+            auto distance_squared = rec.t * rec.t * direction.sqmag();
+
+            auto cosine = std::fabs(vec3::dot(direction, normal) / direction.mag());
+
+            return distance_squared / (cosine * area);
+        }
+
+        vec3 random(const vec3& origin) const override {
+            double u = random_double();
+            double v = random_double();
+
+            if (u + v > 1) {
+                u = 1-u;
+                v = 1-v;
+            }
+
+            vec3 point_on_triangle = (1-u-v)*a + u*b + v*c;
+            return point_on_triangle - origin;
+        }
     private:
         /**
          * The vertices of this triangle in 3D space
@@ -187,14 +219,11 @@ class triangle : public collidable {
          * The material of this triangle
          */
         shared_ptr<material> mat;
-};
 
-class triangle_mesh : public collidable {
-    public:
-
-    private:
-        shared_ptr<collidable_list> triangles;
-
+        /**
+         * The area of this triangle
+         */
+        double area;
 };
 
 #endif

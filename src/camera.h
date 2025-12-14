@@ -7,6 +7,7 @@
 #include "material.h"
 #include "mathutils.h"
 #include "cube_map.h"
+#include "pdf.h"
 
 #define EPSILON 0.001
 
@@ -68,11 +69,12 @@ class camera {
         /**
          * Renders a collidable object and outputs the rendered image to given filename
          * @param world collidable to render
+         * @param lights lights to render
          * @param filename name of file to save rendered image to
          * @param num_threads the number of threads to run to render the image,
          *                    values less than 1 default to a singly-threaded render
          */
-        void render(const collidable& world, const std::string& filename, int num_threads = 1) {
+        void render(const collidable& world, const collidable& lights, const std::string& filename, int num_threads = 1) {
             bool multithreaded = num_threads > 1;
             std::clog << "Rendering " << filename << " using " << (multithreaded ? num_threads : 1) << " thread" << (multithreaded ? "s:" : ":") << std::endl;
             const bool anti_alias = samples_per_batch > 0;
@@ -84,8 +86,8 @@ class camera {
 
                 for (int y = 0; y < image_height; y++) {
                     for (int x = 0; x < image_width; x++) {
-                        pool.enqueue([this, x, y, &world, anti_alias]{
-                            render_pixel(x, y, world, anti_alias);
+                        pool.enqueue([this, x, y, &world, &lights, anti_alias]{
+                            render_pixel(x, y, world, lights, anti_alias);
                         });
                     }
                 }
@@ -105,7 +107,7 @@ class camera {
 
                 for (int y = 0; y < image_height; y++) {
                     for (int x = 0; x < image_width; x++) {
-                        render_pixel(x, y, world, anti_alias);
+                        render_pixel(x, y, world, lights, anti_alias);
 
                         // Show progress
                         int current_progress = 100*(y * image_width + x)/(image_width*image_height);
@@ -261,9 +263,10 @@ class camera {
          * @param x image x coord
          * @param y image y coord
          * @param world collidable to render
+         * @param lights lights to render
          * @param anti_alias if true, use multiple randomly sampled rays, if false, use only one ray
          */
-        void render_pixel(int x, int y, const collidable& world, bool anti_alias) {
+        void render_pixel(int x, int y, const collidable& world, const collidable& lights, bool anti_alias) {
             color pixel_color = color();
             if (anti_alias) {
                 double s1 = 0;
@@ -272,7 +275,7 @@ class camera {
                 for (int batch = 0; batch < batches_per_pixel; batch++) {
                     for (int sample = 0; sample < samples_per_batch; sample++) {
                         ray r = get_ray(x, y, sample_square());
-                        color c = ray_color(r, world, max_depth);
+                        color c = ray_color(r, world, lights, max_depth);
                         pixel_color += c;
                         s1 += illuminance(c);
                         s2 += std::pow(illuminance(c), 2);
@@ -291,7 +294,7 @@ class camera {
                 pixel_color = linear_to_gamma(pixel_color/n);
             } else {
                 ray r = get_ray(x, y, vec3());
-                pixel_color = linear_to_gamma(ray_color(r, world, max_depth));
+                pixel_color = linear_to_gamma(ray_color(r, world, lights, max_depth));
             }
             img[y][x] = pixel_color;
         }
@@ -363,7 +366,7 @@ class camera {
          * @param world object to collide with
          * @param depth number of bounces before stopping and returning white for the last color
          */
-        color ray_color(const ray& r, const collidable& world, int depth) const {
+        color ray_color(const ray& r, const collidable& world, const collidable& lights, int depth) const {
             if (depth <= 0) {
                 return color();
             }
@@ -375,19 +378,27 @@ class camera {
                 return background.value(r);
             }
 
-            ray scattered;
-            color attenuation;
+            scatter_record srec;
+            color emission = rec.mat->emit(r, rec, rec.u, rec.v, rec.point);
 
-            color emission = rec.mat->emit(rec.u, rec.v, rec.point);
-
-            if (!rec.mat->scatter(r, rec, attenuation, scattered)) {
+            if (!rec.mat->scatter(r, rec, srec)) {
                 return emission;
             }
 
+            if (srec.skip_pdf) {
+                return srec.attenuation * ray_color(srec.skip_pdf_ray, world, lights, depth-1);
+            }
+
+            // Use the lights' pdf to sample lights more often
+            auto light_ptr = make_shared<collidable_pdf>(lights, rec.point);
+            mixture_pdf p(light_ptr, srec.pdf_ptr);
+
+            ray scattered = ray(rec.point, p.generate(), r.time());
+            double pdf_value = p.value(scattered.direction());
+
             double scattering_pdf = rec.mat->scattering_pdf(r, rec, scattered);
-            double pdf_value = scattering_pdf;
             
-            color scatter = (attenuation * scattering_pdf * ray_color(scattered, world, depth-1)) / pdf_value;
+            color scatter = (srec.attenuation * scattering_pdf * ray_color(scattered, world, lights, depth-1)) / pdf_value;
 
             return emission + scatter;
 
