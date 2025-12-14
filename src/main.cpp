@@ -9,7 +9,6 @@
 
 void bouncing_spheres() {
     collidable_list world;
-    collidable_list lights;
 
     // auto ground_material = make_shared<lambertian>(color(0.5, 0.5, 0.5));
     // world.add(make_shared<sphere>(vec3(0,-1000,0), 1000, ground_material));
@@ -73,12 +72,11 @@ void bouncing_spheres() {
     world = collidable_list(make_shared<kd_tree>(world));
 
     camera cam(config);
-    cam.render(world, lights, "bouncing_spheres.ppm", std::thread::hardware_concurrency());
+    cam.render(world, "bouncing_spheres.ppm", std::thread::hardware_concurrency());
 }
 
 void checkered_spheres() {
     collidable_list world;
-    collidable_list lights;
 
     auto checker = make_shared<checker_texture>(0.32, color(.2, .3, .1), color(.9, .9, .9));
 
@@ -104,12 +102,11 @@ void checkered_spheres() {
     camera cam(config);
     
 
-    cam.render(world, lights, "checkered_sphere.ppm", std::thread::hardware_concurrency()-1);
+    cam.render(world, "checkered_sphere.ppm", std::thread::hardware_concurrency()-1);
 }
 
 void earth() {
     collidable_list world;
-    collidable_list lights;
 
     auto earth_texture = make_shared<image_texture>("resources/earthmap.jpg");
     auto earth_surface = make_shared<lambertian>(earth_texture);
@@ -135,12 +132,11 @@ void earth() {
 
     camera cam(config);
 
-    cam.render(world, lights, "earth.ppm", std::thread::hardware_concurrency());
+    cam.render(world, "earth.ppm", std::thread::hardware_concurrency());
 }
 
 void perlin_spheres() {
     collidable_list world;
-    collidable_list lights;
 
     auto pertext = make_shared<noise_texture>(4);
     world.add(make_shared<sphere>(vec3(0,-1000,0), 1000, make_shared<lambertian>(pertext)));
@@ -164,12 +160,11 @@ void perlin_spheres() {
 
     camera cam(config);
 
-    cam.render(world, lights, "perlin_sphere.ppm", std::thread::hardware_concurrency()-1);
+    cam.render(world, "perlin_sphere.ppm", std::thread::hardware_concurrency()-1);
 }
 
 void quads() {
     collidable_list world;
-    collidable_list lights;
 
     // Materials
     auto left_red     = make_shared<lambertian>(color(1.0, 0.2, 0.2));
@@ -204,7 +199,7 @@ void quads() {
 
     camera cam(config);
 
-    cam.render(world, lights, "quads.ppm", std::thread::hardware_concurrency()-1);
+    cam.render(world, "quads.ppm", std::thread::hardware_concurrency()-1);
 }
 
 void simple_light() {
@@ -216,8 +211,12 @@ void simple_light() {
     world.add(make_shared<sphere>(vec3(0,2,0), 2, make_shared<lambertian>(pertext)));
 
     auto difflight = make_shared<diffuse_light>(color(4,4,4));
-    lights.add(make_shared<quad>(vec3(3,1,-2), vec3(2,0,0), vec3(0,2,0), difflight));
-    lights.add(make_shared<sphere>(vec3(0,7,0), 2, difflight));
+    auto empty_material = make_shared<material>();
+    
+    world.add(make_shared<quad>(vec3(3,1,-2), vec3(2,0,0), vec3(0,2,0), difflight));
+    world.add(make_shared<sphere>(vec3(0,7,0), 2, difflight));
+    lights.add(make_shared<quad>(vec3(3,1,-2), vec3(2,0,0), vec3(0,2,0), empty_material));
+    // lights.add(make_shared<sphere>(vec3(0,7,0), 2, empty_material));
 
     auto background_tex = make_shared<solid_color>(color(0,0,0));
 
@@ -231,7 +230,7 @@ void simple_light() {
         vec3(0, 2, 0),  //  vec3 lookat;
         vec3(0, 1, 0),  //  vec3 up;
         4,              //  int samples_per_batch;
-        8,              //  int batches_per_pixel;
+        64,              //  int batches_per_pixel;
         0.05,           //  double max_tolerance;
         50,             //  int max_depth;
         0,              //  double defocus_angle;
@@ -261,6 +260,9 @@ void cornell_box() {
     world.add(make_shared<quad>(vec3(0,0,0), vec3(555,0,0), vec3(0,0,555), white));
     world.add(make_shared<quad>(vec3(555,555,555), vec3(-555,0,0), vec3(0,0,-555), white));
     world.add(make_shared<quad>(vec3(0,0,555), vec3(555,0,0), vec3(0,555,0), white));
+    
+    // Light
+    world.add(make_shared<quad>(vec3(213,554,227), vec3(130,0,0), vec3(0,0,105), light));
 
     // Inside boxes
     shared_ptr<collidable> box1 = box(vec3(0,0,0), vec3(165,330,165), white);
@@ -268,12 +270,16 @@ void cornell_box() {
     box1 = make_shared<translate>(box1, vec3(265,0,295));
     world.add(box1);
 
-    shared_ptr<collidable> box2 = box(vec3(0,0,0), vec3(165,165,165), white);
-    box2 = make_shared<rotate>(box2, vec3(0, 1, 0), -18);
-    box2 = make_shared<translate>(box2, vec3(130,0,65));
-    world.add(box2);
+    // shared_ptr<collidable> box2 = box(vec3(0,0,0), vec3(165,165,165), white);
+    // box2 = make_shared<rotate>(box2, vec3(0, 1, 0), -18);
+    // box2 = make_shared<translate>(box2, vec3(130,0,65));
+    // world.add(box2);
 
-    // Light
+    // Glass sphere
+    auto glass = make_shared<dielectric>(1.5);
+    world.add(make_shared<sphere>(vec3(190,90,190), 90, glass));
+
+    // Light sources
     auto empty_material = shared_ptr<material>();
     lights.add(make_shared<quad>(vec3(343,554,332), vec3(-130,0,0), vec3(0,0,-105), empty_material));
     lights.add(make_shared<sphere>(vec3(190, 90, 190), 90, empty_material));
@@ -285,8 +291,8 @@ void cornell_box() {
         vec3(278, 278, -800),   //  vec3 lookfrom;
         vec3(278, 278, 0),      //  vec3 lookat;
         vec3(0, 1, 0),          //  vec3 up;
-        32,                     //  int samples_per_batch;
-        32,                     //  int batches_per_pixel;
+        2,                     //  int samples_per_batch;
+        2,                     //  int batches_per_pixel;
         0.05,                   //  double max_tolerance;
         50,                     //  int max_depth;
         0,                      //  double defocus_angle;
@@ -299,63 +305,8 @@ void cornell_box() {
     cam.render(world, lights, "cornell_box.ppm", std::thread::hardware_concurrency());
 }
 
-void triangle_test() {
+void diamond_obj() {
     collidable_list world;
-    collidable_list lights;
-
-    // Materials
-    auto red   = make_shared<lambertian>(color(.65, .05, .05));
-    auto white = make_shared<lambertian>(color(.73, .73, .73));
-    auto green = make_shared<lambertian>(color(.12, .45, .15));
-    // auto light = make_shared<diffuse_light>(color(15, 15, 15));
-
-    vec3 a = vec3(-0.5, -0.5,  1.0);
-    vec3 b = vec3(-0.25, 0.5,  1.0);
-    vec3 c = vec3( 0.0,  0.0,  1.0);
-
-    auto tri = make_shared<triangle>(a, b, c, green);
-    
-    auto q = make_shared<quad>(
-        a + vec3(0, 0, 0.01),
-        b-a,
-        c-a,
-        red
-    );
-
-    auto sa = make_shared<sphere>(a, 0.01, red);
-    auto sb = make_shared<sphere>(b, 0.01, green);
-    auto sc = make_shared<sphere>(c, 0.01, white);
-
-    world.add(tri);
-    world.add(q);
-    world.add(sa);
-    world.add(sb);
-    world.add(sc);
-
-    camera_config config = {
-        400,            //  int image_width;
-        500,            //  int image_height;
-        80,             //  double vfov;
-        vec3(0, 0, 0),  //  vec3 lookfrom;
-        vec3(0, 0.125, 1),  //  vec3 lookat;
-        vec3(0, 1, 0),  //  vec3 up;
-        4,              //  int samples_per_batch;
-        8,              //  int batches_per_pixel;
-        0.05,           //  double max_tolerance;
-        50,             //  int max_depth;
-        0,              //  double defocus_angle;
-        10,             //  double defocus_dist;
-        2               //  double gamma;
-    };
-
-    camera cam(config);
-
-    cam.render(world, lights, "triangle_test.ppm", std::thread::hardware_concurrency());
-}
-
-void obj_file_test() {
-    collidable_list world;
-    collidable_list lights;
 
     // Materials
     auto red   = make_shared<lambertian>(color(.65, .05, .05));
@@ -402,12 +353,11 @@ void obj_file_test() {
 
     camera cam(config);
 
-    cam.render(world, lights, "obj_file_test.ppm", std::thread::hardware_concurrency());
+    cam.render(world, "diamond_obj.ppm", std::thread::hardware_concurrency());
 }
 
-void obj_file_test_comparision() {
+void diamond_recreated() {
     collidable_list world;
-    collidable_list lights;
 
     // Materials
     auto red   = make_shared<lambertian>(color(.65, .05, .05));
@@ -420,7 +370,6 @@ void obj_file_test_comparision() {
     auto shiny = make_shared<metal>(color(.73, .73, .73), 0);
     auto checker_tex = make_shared<checker_texture>(15, color(.2, .3, .1), color(.9, .9, .9));
     auto checker_mat = make_shared<lambertian>(checker_tex);
-
     
     vec3 v1 = vec3(0.000000E+00, 0.000000E+00, 78.0000);
     vec3 v2 = vec3(45.0000, 45.0000, 0.000000E+00);
@@ -479,12 +428,11 @@ void obj_file_test_comparision() {
 
     camera cam(config);
 
-    cam.render(world, lights, "obj_file_test_comparision.ppm", std::thread::hardware_concurrency());
+    cam.render(world, "diamond_recreated.ppm", std::thread::hardware_concurrency());
 }
 
 void cube() {
     collidable_list world;
-    collidable_list lights;
 
     // Materials
     auto red   = make_shared<lambertian>(color(.65, .05, .05));
@@ -536,12 +484,11 @@ void cube() {
 
     camera cam(config);
 
-    cam.render(world, lights, "cube.ppm", std::thread::hardware_concurrency());
+    cam.render(world, "cube.ppm", std::thread::hardware_concurrency());
 }
 
 void teapot() {
     collidable_list world;
-    collidable_list lights;
 
     // Materials
     auto red   = make_shared<lambertian>(color(.65, .05, .05));
@@ -584,24 +531,23 @@ void teapot() {
 
     camera cam(config);
 
-    cam.render(world, lights, "teapot.ppm", std::thread::hardware_concurrency());
+    cam.render(world, "teapot.ppm", std::thread::hardware_concurrency());
 }
 
 void load_demo(int selection) {
     switch (selection) {
-        case 1: bouncing_spheres();             break;
-        case 2: checkered_spheres();            break;
-        case 3: earth();                        break;
-        case 4: perlin_spheres();               break;
-        case 5: quads();                        break;
-        case 6: simple_light();                 break;
-        case 7: cornell_box();                  break;
-        case 8: triangle_test();                break;
-        case 9: obj_file_test();                break;
-        case 10: obj_file_test_comparision();   break;
-        case 11: cube();   break;
-        case 12: teapot();                      break;
-        default:                                break;
+        case 1: bouncing_spheres();         break;
+        case 2: checkered_spheres();        break;
+        case 3: earth();                    break;
+        case 4: perlin_spheres();           break;
+        case 5: quads();                    break;
+        case 6: simple_light();             break;
+        case 7: cornell_box();              break;
+        case 8: diamond_obj();              break;
+        case 9: diamond_recreated();        break;
+        case 10: cube();                    break;
+        case 11: teapot();                  break;
+        default:                            break;
     }
 }
 
@@ -622,11 +568,10 @@ int main(int argc, const char** argv) {
             "5: Quads\n"
             "6: Simple Light\n"
             "7: Cornell Box\n"
-            "8: Triangle Test\n"
-            "9: .obj File Test\n"
-            "10: .obj File Test Replica\n"
-            "11: Cube\n"
-            "12: Teapot\n"
+            "8: Diamond from .obj file\n"
+            "9: Diamond recreated in code\n"
+            "10: Cube\n"
+            "11: Teapot\n"
         << std::endl;
         return 0;
     }

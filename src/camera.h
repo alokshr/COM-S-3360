@@ -12,6 +12,14 @@
 #define EPSILON 0.001
 
 /**
+ * An enum for differentiating between old renders and new renders
+ */
+enum light_sampling_mode {
+    no_lights,
+    light_sampling
+};
+
+/**
  * A struct for configuring common camera settings
  */
 struct camera_config {
@@ -67,14 +75,15 @@ class camera {
         }
 
         /**
-         * Renders a collidable object and outputs the rendered image to given filename
+         * Renders a collidable object with lights and outputs the rendered image to given filename
          * @param world collidable to render
          * @param lights lights to render
          * @param filename name of file to save rendered image to
          * @param num_threads the number of threads to run to render the image,
          *                    values less than 1 default to a singly-threaded render
+         * @param mode version of render to run
          */
-        void render(const collidable& world, const collidable& lights, const std::string& filename, int num_threads = 1) {
+        void render(const collidable& world, const collidable& lights, const std::string& filename, int num_threads = 1, int mode = light_sampling) {
             bool multithreaded = num_threads > 1;
             std::clog << "Rendering " << filename << " using " << (multithreaded ? num_threads : 1) << " thread" << (multithreaded ? "s:" : ":") << std::endl;
             const bool anti_alias = samples_per_batch > 0;
@@ -86,8 +95,8 @@ class camera {
 
                 for (int y = 0; y < image_height; y++) {
                     for (int x = 0; x < image_width; x++) {
-                        pool.enqueue([this, x, y, &world, &lights, anti_alias]{
-                            render_pixel(x, y, world, lights, anti_alias);
+                        pool.enqueue([this, x, y, &world, &lights, anti_alias, mode]{
+                            render_pixel(x, y, world, lights, anti_alias, mode);
                         });
                     }
                 }
@@ -107,7 +116,7 @@ class camera {
 
                 for (int y = 0; y < image_height; y++) {
                     for (int x = 0; x < image_width; x++) {
-                        render_pixel(x, y, world, lights, anti_alias);
+                        render_pixel(x, y, world, lights, anti_alias, mode);
 
                         // Show progress
                         int current_progress = 100*(y * image_width + x)/(image_width*image_height);
@@ -123,6 +132,18 @@ class camera {
             print_progress(100);
             std::clog << "\n";
             output_ppm_image(img, filename);
+        }
+
+        /**
+         * Renders a collidable object without lights and outputs the rendered image to given filename
+         * @param world collidable to render
+         * @param lights lights to render
+         * @param filename name of file to save rendered image to
+         * @param num_threads the number of threads to run to render the image,
+         *                    values less than 1 default to a singly-threaded render
+         */
+        void render(const collidable& world, const std::string& filename, int num_threads = 1) {
+            render(world, world, filename, num_threads, no_lights);
         }
 
     private:
@@ -265,8 +286,9 @@ class camera {
          * @param world collidable to render
          * @param lights lights to render
          * @param anti_alias if true, use multiple randomly sampled rays, if false, use only one ray
+         * @param mode version of render to run
          */
-        void render_pixel(int x, int y, const collidable& world, const collidable& lights, bool anti_alias) {
+        void render_pixel(int x, int y, const collidable& world, const collidable& lights, bool anti_alias, int mode) {
             color pixel_color = color();
             if (anti_alias) {
                 double s1 = 0;
@@ -275,7 +297,7 @@ class camera {
                 for (int batch = 0; batch < batches_per_pixel; batch++) {
                     for (int sample = 0; sample < samples_per_batch; sample++) {
                         ray r = get_ray(x, y, sample_square());
-                        color c = ray_color(r, world, lights, max_depth);
+                        color c = ray_color(r, world, lights, max_depth, mode);
                         pixel_color += c;
                         s1 += illuminance(c);
                         s2 += std::pow(illuminance(c), 2);
@@ -294,7 +316,7 @@ class camera {
                 pixel_color = linear_to_gamma(pixel_color/n);
             } else {
                 ray r = get_ray(x, y, vec3());
-                pixel_color = linear_to_gamma(ray_color(r, world, lights, max_depth));
+                pixel_color = linear_to_gamma(ray_color(r, world, lights, max_depth, mode));
             }
             img[y][x] = pixel_color;
         }
@@ -364,9 +386,11 @@ class camera {
          * Returns the final color of a ray after bouncing off of a collidable object
          * @param r ray to project
          * @param world object to collide with
+         * @param lights lights to sample
          * @param depth number of bounces before stopping and returning white for the last color
+         * @param mode version of render to run
          */
-        color ray_color(const ray& r, const collidable& world, const collidable& lights, int depth) const {
+        color ray_color(const ray& r, const collidable& world, const collidable& lights, int depth, int mode) const {
             if (depth <= 0) {
                 return color();
             }
@@ -378,15 +402,28 @@ class camera {
                 return background.value(r);
             }
 
-            scatter_record srec;
+            // Get emitted and scattered colors
             color emission = rec.mat->emit(r, rec, rec.u, rec.v, rec.point);
-
+            
+            scatter_record srec;
             if (!rec.mat->scatter(r, rec, srec)) {
                 return emission;
             }
 
+            // Material doesn't support pdfs, use deterministic scattered ray instead
             if (srec.skip_pdf) {
-                return srec.attenuation * ray_color(srec.skip_pdf_ray, world, lights, depth-1);
+                return srec.attenuation * ray_color(srec.skip_pdf_ray, world, lights, depth-1, mode);
+            }
+
+            if (mode == no_lights) {
+                ray scattered = ray(rec.point, srec.pdf_ptr->generate(), r.time());
+                double pdf = srec.pdf_ptr->value(scattered.direction());
+
+                double scattering_pdf = rec.mat->scattering_pdf(r, rec, scattered);
+
+                color scatter = srec.attenuation * scattering_pdf * ray_color(scattered, world, lights, depth-1, mode) / pdf;
+
+                return emission + scatter;
             }
 
             // Use the lights' pdf to sample lights more often
@@ -398,7 +435,7 @@ class camera {
 
             double scattering_pdf = rec.mat->scattering_pdf(r, rec, scattered);
             
-            color scatter = (srec.attenuation * scattering_pdf * ray_color(scattered, world, lights, depth-1)) / pdf_value;
+            color scatter = (srec.attenuation * scattering_pdf * ray_color(scattered, world, lights, depth-1, mode)) / pdf_value;
 
             return emission + scatter;
 

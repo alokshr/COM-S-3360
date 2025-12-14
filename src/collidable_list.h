@@ -68,6 +68,7 @@ class collidable_list : public collidable {
         aabb bounding_box() const override { return bbox; }
         
         double pdf_value(const vec3& origin, const vec3& direction) const override {
+            if (objects.size() == 0) return 0.0;
             double weight = 1.0 / objects.size();
             double sum = 0.0;
 
@@ -78,6 +79,7 @@ class collidable_list : public collidable {
         }
 
         vec3 random(const vec3& origin) const override {
+            if (objects.size() == 0) return vec3(1, 0, 0);
             auto int_size = int(objects.size());
             return objects[random_int(0, int_size-1)]->random(origin);
         }
