@@ -170,4 +170,86 @@ class rotate : public collidable {
          */
         aabb bbox;
 };
+
+/**
+ * A class for scaling collidables
+ */
+class scale : public collidable {
+    public:
+        /**
+         * Creates a scaled version of a given collidable object
+         * @param obj object to scale
+         * @param s amount to scale by
+         */
+        scale(shared_ptr<collidable> obj, const vec3& s)
+            : object(obj), scale_factor(s),
+            inv_scale(1.0 / s.x(), 1.0 / s.y(), 1.0 / s.z())
+        {
+            // Scale bounding box
+            bbox = object->bounding_box();
+
+            vec3 min = vec3(bbox.x.min, bbox.y.min, bbox.z.min);
+            vec3 max = vec3(bbox.x.max, bbox.x.max, bbox.x.max);
+
+            min = vec3(min.x() * s.x(), min.y() * s.y(), min.z() * s.z());
+            max = vec3(max.x() * s.x(), max.y() * s.y(), max.z() * s.z());
+
+            bbox = aabb(min, max);
+        }
+
+        bool hit(const ray& r, interval ray_t, collision_hit& rec) const override {
+            // Transform ray into object space
+            ray scaled_ray(
+                r.origin() * inv_scale,
+                r.direction() * inv_scale,
+                r.time()
+            );
+
+            if (!object->hit(scaled_ray, ray_t, rec))
+                return false;
+
+            // Transform hit point and normal back into world space
+            rec.point = vec3(
+                rec.point.x()*scale_factor.x(),
+                rec.point.y()*scale_factor.y(),
+                rec.point.z()*scale_factor.z()
+            );
+
+            vec3 normal = vec3(
+                rec.normal.x() * inv_scale.x(),
+                rec.normal.y() * inv_scale.y(),
+                rec.normal.z() * inv_scale.z()
+            );
+
+            rec.normal = normal.normalize();
+
+            return true;
+        }
+
+        aabb bounding_box() const override {
+            return bbox;
+        }
+
+    private:
+        /**
+         * The object this scaling affects
+         */
+        shared_ptr<collidable> object;
+
+        /**
+         * The factor to scale by
+         */
+        vec3 scale_factor;
+
+        /**
+         * The inverse factor used to scale by
+         */
+        vec3 inv_scale;
+
+        /**
+         * The updated bounding box of the scaled object
+         */
+        aabb bbox;
+};
+
 #endif

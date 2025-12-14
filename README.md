@@ -3,6 +3,7 @@
 This project is a 3D raytracing program that contains the following features:
 
 ## Required Features
+
 - Customizable camera
 - Multisampled anti-aliasing
 - Rendering of primitive spheres and triangles through ray/sphere and ray/triangle intersections
@@ -11,6 +12,7 @@ This project is a 3D raytracing program that contains the following features:
 - Simple diffuse, specular, dielectric, and emissive materials
 
 ## Additional Features
+
 - Rendering of quads (10)
 - Motion blur (10)
 - Depth of field (10)
@@ -24,4 +26,8 @@ This project is a 3D raytracing program that contains the following features:
 
 Total: 110
 
-### [TODO]
+## Usage
+
+To run this program, first run the `make` command to build the `main.exe` used to build the various demos. Running `make clean` removes all .exe, .o, and .ppm files.
+
+Run `main.exe` to see how to render each demo.

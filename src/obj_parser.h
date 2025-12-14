@@ -99,7 +99,7 @@ class obj_parser {
             file.close();
         }
     
-        shared_ptr<collidable_list> generate_triangles(shared_ptr<material> mat) {
+        shared_ptr<collidable> generate_triangles(shared_ptr<material> mat) {
             shared_ptr<collidable_list> objects = make_shared<collidable_list>();
 
             for (const auto& face_group : face_groups) {

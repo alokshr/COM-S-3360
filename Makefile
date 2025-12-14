@@ -10,7 +10,7 @@ all: $(BIN)/main.exe
 $(BIN)/main.exe: $(OBJ)/main.o | $(BIN)
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
-$(OBJ)/main.o: $(SRC)/main.cpp $(SRC)/ray.h $(SRC)/camera.h $(SRC)/material.h $(SRC)/thread_pool.h $(SRC)/kd_tree.h $(SRC)/perlin.h $(SRC)/obj_parser.h $(SRC)/triangle.h $(SRC)/cube_map.h | $(OBJ)
+$(OBJ)/main.o: $(SRC)/main.cpp $(SRC)/camera.h $(SRC)/collidable_list.h $(SRC)/kd_tree.h $(SRC)/texture.h $(SRC)/sphere.h $(SRC)/quad.h $(SRC)/triangle.h $(SRC)/obj_parser.h $(SRC)/constant_medium.h | $(OBJ)
 	$(CXX) $(CXXFLAGS) -I$(SRC) $< -o $@ -c
 
 $(BIN):
