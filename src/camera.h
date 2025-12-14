@@ -86,7 +86,7 @@ class camera {
         void render(const collidable& world, const collidable& lights, const std::string& filename, int num_threads = 1, int mode = light_sampling) {
             bool multithreaded = num_threads > 1;
             std::clog << "Rendering " << filename << " using " << (multithreaded ? num_threads : 1) << " thread" << (multithreaded ? "s:" : ":") << std::endl;
-            const bool anti_alias = samples_per_batch > 0;
+            const bool anti_alias = samples_per_batch > 1;
             print_progress(0);
 
             if (multithreaded) {
@@ -299,18 +299,19 @@ class camera {
                         ray r = get_ray(x, y, sample_square());
                         color c = ray_color(r, world, lights, max_depth, mode);
                         pixel_color += c;
-                        s1 += illuminance(c);
-                        s2 += std::pow(illuminance(c), 2);
+                        double ill = illuminance(c); 
+                        s1 += ill;
+                        s2 += ill*ill;
                         n++;
                     }
                     if (n < 2) continue;
                     // Check if we have converged to a single value
                     double mu = s1/n;
-                    double epsilon2 = (s2 - std::pow(s1, 2)/n)/(n-1);
+                    double epsilon2 = (s2 - (s1*s1)/n)/(n-1);
 
                     // Construct a 95% confidence interval
                     double I = 1.96 * std::sqrt(epsilon2/n);
-                    if (I <= max_tolerance*mu) break;
+                    if (mu > 1e-12 && I <= max_tolerance*mu) break;
                 }
                 // pixel_color = lerp(color(), color(1, 1, 1), n/(batches_per_pixel*samples_per_batch));
                 pixel_color = linear_to_gamma(pixel_color/n);
@@ -368,7 +369,7 @@ class camera {
          * Scales a scalar value to the camera's gamma scale
          */
         inline double linear_to_gamma(double value) const {
-            return (value > 0) ? pow(value, 1.0/gamma) : 0;
+            return (value > 0) ? std::pow(value, 1.0/gamma) : 0;
         }
 
         /**

@@ -36,7 +36,14 @@ int output_ppm_image(image img, const std::string& filename) {
 
     for (int y = 0; y < img.size(); y++) {
         for (int x = 0; x < img[0].size(); x++) {
-            color c = color_float_to_rgb(img[y][x]);
+            color fc = img[y][x];
+
+            // Avoid NaN color values
+            if (fc.x() != fc.x()) fc[0] = 0.0;
+            if (fc.y() != fc.y()) fc[1] = 0.0;
+            if (fc.z() != fc.z()) fc[2] = 0.0;
+
+            color c = color_float_to_rgb(fc);
             
             file << c[0] << " " << c[1] << " " << c[2] << " ";
         }

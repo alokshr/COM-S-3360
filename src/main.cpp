@@ -7,6 +7,8 @@
 #include "triangle.h"
 #include "obj_parser.h"
 
+#include <chrono>
+
 void bouncing_spheres() {
     collidable_list world;
 
@@ -204,7 +206,6 @@ void quads() {
 
 void simple_light() {
     collidable_list world;
-    collidable_list lights;
 
     auto pertext = make_shared<noise_texture>(4);
     world.add(make_shared<sphere>(vec3(0,-1000,0), 1000, make_shared<lambertian>(pertext)));
@@ -215,8 +216,6 @@ void simple_light() {
     
     world.add(make_shared<quad>(vec3(3,1,-2), vec3(2,0,0), vec3(0,2,0), difflight));
     world.add(make_shared<sphere>(vec3(0,7,0), 2, difflight));
-    lights.add(make_shared<quad>(vec3(3,1,-2), vec3(2,0,0), vec3(0,2,0), empty_material));
-    // lights.add(make_shared<sphere>(vec3(0,7,0), 2, empty_material));
 
     auto background_tex = make_shared<solid_color>(color(0,0,0));
 
@@ -229,19 +228,19 @@ void simple_light() {
         vec3(26, 3, 6), //  vec3 lookfrom;
         vec3(0, 2, 0),  //  vec3 lookat;
         vec3(0, 1, 0),  //  vec3 up;
-        4,              //  int samples_per_batch;
-        64,              //  int batches_per_pixel;
-        0.05,           //  double max_tolerance;
+        64,             //  int samples_per_batch;
+        32,             //  int batches_per_pixel;
+        1e-8,           //  double max_tolerance;
         50,             //  int max_depth;
         0,              //  double defocus_angle;
         10,             //  double defocus_dist;
         2,              //  double gamma;
-        background      // cube_map background;
+        background      //  cube_map background;
     };
 
     camera cam(config);
 
-    cam.render(world, lights, "simple_light.ppm", std::thread::hardware_concurrency());
+    cam.render(world, "simple_light.ppm", std::thread::hardware_concurrency());
 }
 
 void cornell_box() {
@@ -253,6 +252,7 @@ void cornell_box() {
     auto white = make_shared<lambertian>(color(.73, .73, .73));
     auto green = make_shared<lambertian>(color(.12, .45, .15));
     auto light = make_shared<diffuse_light>(color(15, 15, 15));
+    auto glass = make_shared<dielectric>(1.5);
 
     // Walls
     world.add(make_shared<quad>(vec3(555,0,0), vec3(0,555,0), vec3(0,0,555), green));
@@ -276,12 +276,12 @@ void cornell_box() {
     // world.add(box2);
 
     // Glass sphere
-    auto glass = make_shared<dielectric>(1.5);
     world.add(make_shared<sphere>(vec3(190,90,190), 90, glass));
 
     // Light sources
     auto empty_material = shared_ptr<material>();
-    lights.add(make_shared<quad>(vec3(343,554,332), vec3(-130,0,0), vec3(0,0,-105), empty_material));
+    // auto light_quad = quad(vec3(343,554,332), vec3(-130,0,0), vec3(0,0,-105), empty_material);
+    // lights.add(light_quad);
     lights.add(make_shared<sphere>(vec3(190, 90, 190), 90, empty_material));
 
     camera_config config = {
@@ -291,9 +291,9 @@ void cornell_box() {
         vec3(278, 278, -800),   //  vec3 lookfrom;
         vec3(278, 278, 0),      //  vec3 lookat;
         vec3(0, 1, 0),          //  vec3 up;
-        2,                     //  int samples_per_batch;
-        2,                     //  int batches_per_pixel;
-        0.05,                   //  double max_tolerance;
+        4,                    //  int samples_per_batch;
+        4,                      //  int batches_per_pixel;
+        1e-8,                   //  double max_tolerance;
         50,                     //  int max_depth;
         0,                      //  double defocus_angle;
         10,                     //  double defocus_dist;
@@ -493,7 +493,7 @@ void teapot() {
     // Materials
     auto red   = make_shared<lambertian>(color(.65, .05, .05));
     auto shiny = make_shared<metal>(color(.73, .73, .73), 0);
-    auto checker_tex = make_shared<checker_texture>(0.6, color(.2, .3, .1), color(.9, .9, .9));
+    auto checker_tex = make_shared<checker_texture>(15, color(.2, .3, .1), color(.9, .9, .9));
     auto checker_mat = make_shared<lambertian>(checker_tex);
 
     obj_parser p = obj_parser();
@@ -502,7 +502,7 @@ void teapot() {
     auto model = p.generate_triangles(shiny);
     
     auto floor = make_shared<quad>(
-        vec3(-5000, -100, -5000),
+        vec3(-5000, -15, -5000),
         vec3(10000, 0, 0),
         vec3(0, 0, 10000),
         checker_mat
@@ -521,7 +521,7 @@ void teapot() {
         vec3(0, 0, 0),  //  vec3 lookat;
         vec3(0, 1, 0),  //  vec3 up;
         4,              //  int samples_per_batch;
-        32,              //  int batches_per_pixel;
+        4,              //  int batches_per_pixel;
         0.005,           //  double max_tolerance;
         50,             //  int max_depth;
         0,              //  double defocus_angle;
@@ -582,7 +582,19 @@ int main(int argc, const char** argv) {
         std::istringstream ss(argv[i+1]);
         int demo_num;
         ss >> demo_num;
+        auto start = std::chrono::steady_clock::now();
         load_demo(demo_num);
-        std::cout << std::endl;
+        auto elapsed = std::chrono::steady_clock::now() - start;
+        auto hours = std::chrono::duration_cast<std::chrono::hours>(elapsed);       elapsed -= hours;
+        auto minutes = std::chrono::duration_cast<std::chrono::minutes>(elapsed);   elapsed -= minutes;
+        auto seconds = std::chrono::duration_cast<std::chrono::seconds>(elapsed);   elapsed -= seconds;
+        auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed);
+
+        std::cout << "Time elapsed: "
+                << std::setw(2) << std::setfill('0') << hours.count() << ":"
+                << std::setw(2) << std::setfill('0') << minutes.count() << ":"
+                << std::setw(2) << std::setfill('0') << seconds.count() << ":"
+                << std::setw(3) << std::setfill('0') << milliseconds.count() << std::endl;
     }
+    return 0;
 }
