@@ -19,6 +19,9 @@ $(BIN):
 $(OBJ):
 	mkdir "$@"
 
-.PHONY: clean
+.PHONY: clean run
 clean:
 	rm -f $(BIN)/*.exe $(OBJ)/*.o *.ppm
+
+run: $(BIN)/main.exe
+	$(BIN)/main.exe $(ARGS)

@@ -30,6 +30,8 @@ Total: 110
 
 ## Usage
 
-To run this program, first run the `make` command to build the `main.exe` used to build the various demos. Running `make clean` removes all .exe, .o, and .ppm files.
+To build this program, first run the `make` command to build the `main.exe` used to build the various demos. Running `make clean` removes all .exe, .o, and .ppm files.
 
-Run `main.exe` to see how to render each demo.
+To run this program, run `make run ARGS=""`, where `ARGS=""` will contain the arguments to pass into the program.
+
+Ex: `make run ARGS="1 2"` will run demos 1 and 2.
