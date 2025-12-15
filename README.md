@@ -2,6 +2,8 @@
 
 This project is a 3D raytracing program that contains the following features:
 
+![Image of a Cornell box with a metal teapot, glass sphere, and smoke box](resources/final_render.png)
+
 ## Required Features
 
 - Customizable camera

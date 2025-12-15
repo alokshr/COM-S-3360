@@ -619,8 +619,8 @@ void final_render()
         vec3(278, 278, -800), //  vec3 lookfrom;
         vec3(278, 278, 0),    //  vec3 lookat;
         vec3(0, 1, 0),        //  vec3 up;
-        32,                    //  int samples_per_batch;
-        32,                    //  int batches_per_pixel;
+        16,                    //  int samples_per_batch;
+        16,                    //  int batches_per_pixel;
         1e-8,                 //  double max_tolerance;
         10,                   //  int max_depth;
         0,                    //  double defocus_angle;
